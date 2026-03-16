@@ -25,13 +25,13 @@ Our planned workflow is to follow the methods listed in the paper ***Chromatin S
 
 **Workflow**  
 ```mermaid
-graph TD;
-    Inputs: ChIPseq and ATACseq fastq files-->Quality filtering with Trimmomatic;
-    Quality filtering with Trimmomatic-->Read mapping to reference genome with BWA MEM;
-    Read mapping to reference genome with BWA MEM-->Duplicate removal with Picard's MarkDuplicates;
-    Duplicate removal with Picard's MarkDuplicates-->Peak identification with MacS2;
-    Peak identification with MacS2-->BED file creation;
-    BED file creation-->Output: Human readable genome browser;
+graph LR;
+    A[Inputs: ChIP-seq and ATAC-seq fastq files]-->B[Quality filtering with Trimmomatic];
+    B[Quality filtering with Trimmomatic]-->C[Read mapping to reference genome with BWA-MEM];
+    C[Read mapping to reference genome with BWA-MEM]-->C[Duplicate removal with Picard's MarkDuplicates];
+    D[Duplicate removal with Picard's MarkDuplicates]-->E[Peak identification with MacS2];
+    E[Peak identification with MacS2]-->F[BED file creation];
+    F[BED file creation]-->G[Output: Human readable genome browser];
 ```
 
 1. Obtain raw ChIP-Seq and ATAC-Seq data  
