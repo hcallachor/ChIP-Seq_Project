@@ -21,7 +21,7 @@ This project will allow users to visualize the 11 distinct chromatin states and 
 
 # Proposed Solution
 
-Our planned workflow is to follow the methods listed in the paper ***Chromatin State Dynamics During the Plasmodium falciparum Intraerythrocytic Development Cycle***. We plan to use the same tools and the parameters when disclosed, in order to create an output that is ideally identical to the output from the paper.
+Our planned workflow is to follow the methods listed in the paper ***Chromatin State Dynamics During the Plasmodium falciparum Intraerythrocytic Development Cycle***. We plan to use the same tools and the parameters when disclosed, in order to create an output that is statistically similar to the output from the paper.
 
 **Workflow**  
 ```mermaid
@@ -45,6 +45,7 @@ The workflow steps must be completed in this order as the output of one step is 
 8. Map the location of chromatin regulatory states across the genome using ChromHMM (BED file)  
 9. Use pybedtools to overlay the BED files containing the filtered transcription factor binding sites onto the BED files containing the ChromHMM chromatin state locations to see where they intersect  
 10. View the generated BED files using UCSC Genome Browser
+11. We will compare the similarity between the generated BED files and the BED files provided by the paper using BEDtools jaccard function.
 
 Once our pipeline is functional, and our output matches that of the paper, we will use the results to identify candidate regulators for 1-Cys Prx. However, the ChIP-seq data used in the paper is from blood stage parasites, when 1-Cys Prx is not highly upregulated, so we will likely need to use other ChIP-seq data for *Plasmodium* from NCBI or PlasmoDB in order to accomplish this goal.
 
