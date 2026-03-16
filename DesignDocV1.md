@@ -24,7 +24,15 @@ This project will allow users to visualize the 11 distinct chromatin states and 
 Our planned workflow is to follow the methods listed in the paper ***Chromatin State Dynamics During the Plasmodium falciparum Intraerythrocytic Development Cycle***. We plan to use the same tools and the parameters when disclosed, in order to create an output that is ideally identical to the output from the paper.
 
 **Workflow**  
-![][image1]
+```mermaid
+graph TD;
+    Inputs: ChIP-seq/ATAc-seq fastq file-->Quality filtering with Trimmomatic;
+    Quality filtering with Trimmomatic-->Read mapping to reference genome with BWA-MEM;
+    Read mapping to reference genome with BWA-MEM-->Duplicate removal with Picard's MarkDuplicates;
+    Duplicate removal with Picard's MarkDuplicates-->Peak identification with MacS2;
+    Peak identification with MacS2-->BED file creation;
+    BED file creation-->Output: Human-readable genome browser;
+```
 
 1. Obtain raw ChIP-Seq and ATAC-Seq data  
 2. Quality trimming using trimmomatic  
