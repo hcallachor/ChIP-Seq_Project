@@ -116,7 +116,7 @@ rule remove_duplicates:
         "mapped_reads/{sample}.noduplicates.bam"
     shell:
         """
-        java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mappepd_reads/{wildcards.sample}.dup_metrics.txt
+        java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/{wildcards.sample}.dup_metrics.txt
         """
 
 #call peaks using MacS2
