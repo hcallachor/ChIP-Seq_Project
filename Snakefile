@@ -63,7 +63,7 @@ rule trimmomatic:
 #index reference genome for BWA mapping
 rule index_ref:
     input:
-        genome = "ref/P_falciparum3D7.fa"
+        genome="ref/P_falciparum3D7.fa"
     output:
         touch("ref/index.done")
     shell:
@@ -75,7 +75,7 @@ rule index_ref:
 #map reads to reference genome using BWA-MEM
 rule BWA_mapping: #use -M in command to make it compatible with Picard, and pipe command to samtools
     input:
-        genome = "ref/P_falciparum3D7.fa",
+        genome="ref/P_falciparum3D7.fa",
         fastq="trimmed/{sample}.fastq",
         donecheck="ref/index.done"
     output:
@@ -97,27 +97,38 @@ rule filter_by_phred_score:
         samtools view -b -q 30 {input} > {output}
         """
 
-#remove duplicates using Picard’s MarkDuplicates
-rule remove_duplicates:
+#sort bam files by coordinate order using samtools. Picards' MarkDuplicates requires sorted bam files as input
+rule sort_bam:
     input:
         "mapped_reads/{sample}.phred30.bam"
     output:
-
+        "mapped_reads/{sample}.sorted.bam"
     shell:
-    """
+        """
+        samtools sort {input} -o {output}
+        """
 
-    """
+#remove duplicates using Picard’s MarkDuplicates
+rule remove_duplicates:
+    input:
+       "mapped_reads/{sample}.sorted.bam"
+    output:
+        "mapped_reads/{sample}.noduplicates.bam"
+    shell:
+        """
+        java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/{wildcards.sample}.dup_metrics.txt
+        """
 
 #call peaks using MacS2
 rule MacS2:
     input:
-
+    
     output:
 
     shell:
-    """
-
-    """
+        """
+        
+        """
 
 #map the location of chromatin regulatory states across the genome using ChromHMM 
 rule ChromHMM:
@@ -126,9 +137,9 @@ rule ChromHMM:
     output:
 
     shell:
-    """
+        """
 
-    """
+        """
 
 #overlay the BED files containing the filtered transcription factor binding sites onto the BED files containing the ChromHMM chromatin state locations to see where they intersect with pybedtools
 rule pybedtools:
@@ -137,7 +148,6 @@ rule pybedtools:
     output:
 
     shell:
-    """
-
-    """
-
+        """
+     
+        """
