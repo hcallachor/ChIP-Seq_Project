@@ -6,7 +6,7 @@ To run the Snakefile in background with a log file outputted
 nohup snakemake -s snakefile -c 4  > snakemake.log 2>&1 &
 ```
 
-To run the Snakefile clenup
+To run the Snakefile cleanup
 ```bash
 snakemake -c 1 cleanup
 ```
