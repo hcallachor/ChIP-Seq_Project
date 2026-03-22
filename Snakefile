@@ -1,51 +1,41 @@
 #main snakefile
+import os
 
-#samples (idk 100% what samples we have and if they are single or paired end we would have to restructure this if we have both so then trimmomatic will work for each kind of sample)
+#samples (idk if the samples are single or paired end we would have to restructure this if we have both so then trimmomatic will work for each kind of sample)
 samples = [
-"H3K9ac_10h",
-"H3K9ac_30h",
-"H3K9ac_40h",
-"H3K4me1_10h",
-"H3K4me1_30h",
-"H3K4me1_40h",
-"H3K4me3_10h",
-"H3K4me3_30h",
-"H3K4me3_40h",
-"H2AZ_10h",
-"H2AZ_30h",
-"H2AZ_40h",
-"H3K27ac_10h",
-"H3K27ac_30h",
-"H3K27ac_40h",
-"H3K18ac_10h",
-"H3K18ac_30h",
-"H3K18ac_40h",
-"H3K9me3_20h",
-"H3K9me3_40h",
-"HP1_10h",
-"HP1_30h",
-"HP1_40h",
-"ATAC_10h",
-"ATAC_30h",
-"ATAC_40h"    
+    d for d in os.listdir("initial_data")
+    if os.path.isdir(os.path.join("initial_data", d))
 ]
 
 rule all:
     input:
         expand("macs2_peaks/{sample}_peaks.narrowPeak", sample=samples)
 
+#get fastq files from the sra accessions (need to fix so it does both single and paired end files)
+rule fasterq_dump:
+    input:
+        "initial_data/{sample}/{sample}.sra"
+    output:
+        "data/fastq/{sample}.fastq"
+    shell:
+        """
+        mkdir -p data/fastq
+        fasterq-dump {input} -O data/fastq
+        """
+
 #download the genome and annotations
 rule download_reference_genome:
     output:
         genome="ref/P_falciparum3D7.fa",
-        cds="ref/P_falciparum3D7_cds.fa"
+        gff="ref/P_falciparum3D7_annotations.gff3"
     shell:
         """
         mkdir -p ref
         datasets download genome accession GCF_000002765.6 --include gff3,genome --filename ref/ncbi_dataset.zip
         unzip -o ref/ncbi_dataset.zip -d ref/ncbi_dataset
-        cp ref/ncbi_dataset/data/GCF_000002765.6/cds_from_genomic.fna {output.cds}
-        cp ref/ncbi_dataset/data/GCF_000002765.6/GCF_000002765.6.fna {output.genome}
+        cp ref/ncbi_dataset/ncbi_dataset/data/*/*genomic.fna {output.genome}
+        cp ref/ncbi_dataset/ncbi_dataset/data/*/*genomic.gff {output.gff}
+        rm -rf ref/ncbi_dataset ref/ncbi_dataset.zip
         """
 
 #filter reads by quality using Trimmomatic (need to know if data is paired or single end. SE or PE? if we have both types of samples we need to make another rule that does PE and inputs r1 and r2)
@@ -177,5 +167,13 @@ rule pybedtools:
 
         """
 
-     
+#cleanup rule to remove files and run snakemake again
+rule cleanup:
+    shell:
+        """
+        rm -rf ncbi_dataset ncbi_dataset.zip
+        rm -rf ref
+        rm -rf data/fastq
+        rm -rf trimmed mapped_reads macs2_peaks
+        rm -rf .snakemake
         """
