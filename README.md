@@ -14,8 +14,9 @@ Otherwise list full path
 
 
 Example to run:
+```bash
 python ./SampleDownloadPFal.py
-
+```
 To run the Snakefile in background with a log file outputted
 ```bash
 nohup snakemake -s snakefile -c 4  > snakemake.log 2>&1 &
