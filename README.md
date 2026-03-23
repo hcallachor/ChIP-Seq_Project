@@ -39,6 +39,9 @@ java -jar trimmomatic-0.39.jar
 
 Please See https://github.com/usadellab/Trimmomatic/blob/main/README.md For Further Details and to Download trimmomatic-0.39.jar
 
+trimmomatic was downloaded using this zip file:
+http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip
+
 
 
 
