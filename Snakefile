@@ -132,12 +132,13 @@ rule bedtools_intersect:
 #overlay the BED files containing our BED output onto the BED files containing the paper-provided BED output to see where they intersect with pybedtools jaccard
 rule pybedtools_jaccard:
     input:
-
+        provided_BED = []
+        our_BED = []
     output:
 
     shell:
         """
-
+        bedtools jaccard -a <> -b <>
         """
 
 #cleanup rule to remove files and run snakemake again
