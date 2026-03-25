@@ -56,7 +56,7 @@ Once our pipeline is functional, and our output matches that of the paper, we wi
 | March 16th | Initial Presentation, Design Document | PPT \-  Introduction | PPT \- Workflow and Cleaning of powerpoint | PPT \- some of intro and milestones Document \- overview, context, project goals, and proposed solutions |
 | March 23rd | Repo Check \#1   | Input Code, Trimmomatic  | BWA-MEM | Input Code, Trimmomatic  |
 | March 30th | Progress Presentation  | Progress Presentation | Quality filtering and duplicate removal | Quality filtering and duplicate removal |
-| April 6th | Repo Check \#2   | MacS2 | MacS2 | MacS2 |
+| April 6th | Repo Check \#2   | BEDtools Intersect | MacS2 | MacS2 |
 | April 13th | Rough Draft Application Note | Application note | Generate BED files and compare to paper | Connect .bb Code |
 | April 20th | Progress Presentation Repo Check \#3 | Identify candidate regulators for 1-Cys Prx | Connect to Viewer | Connect to Viewer, Progress Presentation |
 | May 1st 4:00 pm | Final Presentation Final Project code Final Application Note | Final Presentation | Final Presentation | Application note |
