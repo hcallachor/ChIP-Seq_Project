@@ -190,7 +190,9 @@ rule bedtools_intersect:
     output:
 
     shell:
-
+        """
+        bedtools intersect -a <> \ -b <>
+        """
 #overlay the BED files containing our BED output onto the BED files containing the paper-provided BED output to see where they intersect with pybedtools jaccard
 rule pybedtools_jaccard:
     input:
