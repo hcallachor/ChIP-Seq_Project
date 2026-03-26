@@ -3,20 +3,13 @@ import os
 import yaml
 
 #load the yaml file containing the metadata for the samples (paired vs single end)
-configfile: "config.yaml"
-sample_types = config["samples"]
-
-#samples 
-samples = [
-    d for d in os.listdir("initial_data")
-    if os.path.isdir(os.path.join("initial_data", d))
-]
+single_samples = config["Single End"]
+paired_samples = config["Paired End"]
+samples = config["SRAs"]
 
 rule all:
-    input:
-        "ref/P_falciparum3D7.fa",    
-        expand("macs2_peaks/{sample}_peaks.narrowPeak", sample=samples),
-        expand("results/{sample}.jaccard.txt", sample=samples)
+    input:   
+        expand("macs2_peaks/{sample}_peaks.narrowPeak", sample=samples)
 
 #get paired end fastq files from the sra accessions  
 rule fasterq_dump:    
@@ -25,21 +18,18 @@ rule fasterq_dump:
     output:
         "data/fastq/{sample}_1.fastq",
         "data/fastq/{sample}_2.fastq"
-    wildcard_constraints:
-        sample="|".join(paired_samples)
     shell:
         """
         mkdir -p data/fastq
         fasterq-dump {input} -O data/fastq --split-files
         """
+        
 #get single end fastq files from sra accessions
 rule fasterq_dump_single:
     input:
         "initial_data/{sample}/{sample}.sra"
     output:
         "data/fastq/{sample}.fastq"
-    wildcard_constraints:
-        sample="|".join(single_samples)
     shell:
         """
         mkdir -p data/fastq
@@ -67,8 +57,6 @@ rule trimmomatic_se:
         "data/fastq/{sample}.fastq"
     output:
         "trimmed/{sample}.fastq"
-    wildcard_constraints:
-        sample="|".join(single_samples)
     shell:
         """ 
         mkdir -p trimmed 
@@ -85,8 +73,6 @@ rule trimmomatic_pe:
         r1_unpaired="trimmed/{sample}_1_unpaired.fastq",
         r2_paired="trimmed/{sample}_2_paired.fastq",
         r2_unpaired="trimmed/{sample}_2_unpaired.fastq"
-    wildcard_constraints:
-        sample="|".join(paired_samples)
     shell:
         """
         mkdir -p trimmed 
@@ -112,12 +98,10 @@ rule bwa_mapping_se: #use -M in command to make it compatible with Picard, and p
         fastq="trimmed/{sample}.fastq",
         donecheck="ref/index.done"
     output:
-        "mapped_reads/{sample}.bam"
-    wildcard_constraints:
-        sample="|".join(single_samples)
+        "mapped_reads/se/{sample}.bam"
     shell:
         """
-        mkdir -p mapped_reads 
+        mkdir -p mapped_reads/se 
         bwa mem -M {input.genome} {input.fastq} | samtools view -bS - > {output}
         """
 
@@ -129,12 +113,10 @@ rule bwa_mapping_pe:
         r2="trimmed/{sample}_2_paired.fastq",
         idx="ref/index.done"
     output:
-        "mapped_reads/{sample}.bam"
-    wildcard_constraints:
-        sample="|".join(paired_samples)
+        "mapped_reads/pe/{sample}.bam"
     shell:
         """
-        mkdir -p mapped_reads
+        mkdir -p mapped_reads/pe
         bwa mem -M {input.genome} {input.r1} {input.r2} | samtools view -bS - > {output}
         """
 
