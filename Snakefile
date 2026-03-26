@@ -9,7 +9,8 @@ samples = config["SRAs"]
 
 rule all:
     input:   
-        expand("macs2_peaks/{sample}_peaks.narrowPeak", sample=samples)
+        expand("macs2_peaks/se/{sample}_peaks.narrowPeak", sample=single_samples) +
+        expand("macs2_peaks/pe/{sample}_peaks.narrowPeak", sample=paired_samples)
 
 #get paired end fastq files from the sra accessions  
 rule fasterq_dump:    
@@ -120,49 +121,94 @@ rule bwa_mapping_pe:
         bwa mem -M {input.genome} {input.r1} {input.r2} | samtools view -bS - > {output}
         """
 
-#quality filter bam files by Phred quality score 30 using samtools
-rule filter_by_phred_score:
+#quality filter SE bam files by Phred quality score 30 using samtools
+rule filter_by_phred_score_se:
     input:
-        "mapped_reads/{sample}.bam"
+        "mapped_reads/se/{sample}.bam"
     output:
-        "mapped_reads/{sample}.phred30.bam"
+        "mapped_reads/se/{sample}.phred30.bam"
     shell:
         """
         samtools view -b -q 30 {input} > {output}
         """
 
-#sort bam files by coordinate order using samtools. Picards' MarkDuplicates requires sorted bam files as input
-rule sort_bam:
+#quality filter PE bam files by Phred quality score 30 using samtools
+rule filter_by_phred_score_pe:
     input:
-        "mapped_reads/{sample}.phred30.bam"
+        "mapped_reads/pe/{sample}.bam"
     output:
-        "mapped_reads/{sample}.sorted.bam"
+        "mapped_reads/pe/{sample}.phred30.bam"
+    shell:
+        """
+        samtools view -b -q 30 {input} > {output}
+        """
+
+#sort SE bam files by coordinate order using samtools. Picards' MarkDuplicates requires sorted bam files as input
+rule sort_bam_se:
+    input:
+        "mapped_reads/se/{sample}.phred30.bam"
+    output:
+        "mapped_reads/se/{sample}.sorted.bam"
     shell:
         """
         samtools sort {input} -o {output}
         """
 
-#remove duplicates using Picard’s MarkDuplicates
-rule remove_duplicates:
+#sort PE bam files by coordinate order using samtools. Picards' MarkDuplicates requires sorted bam files as input
+rule sort_bam_pe:
     input:
-       "mapped_reads/{sample}.sorted.bam"
+        "mapped_reads/pe/{sample}.phred30.bam"
     output:
-        "mapped_reads/{sample}.noduplicates.bam"
+        "mapped_reads/pe/{sample}.sorted.bam"
     shell:
         """
-        java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/{wildcards.sample}.dup_metrics.txt
+        samtools sort {input} -o {output}
         """
 
-#call peaks using MacS2. Need to input a control I think but idk what it is. idk if the command is 100% correct
-rule macs2:
-    input:
-        bam="mapped_reads/{sample}.noduplicates.bam"
-    output:
-        "macs2_peaks/{sample}_peaks.narrowPeak"
-    shell:
+#remove duplicates using Picard’s MarkDuplicates for SE
+rule remove_duplicates_se:
+    input: 
+        "mapped_reads/se/{sample}.sorted.bam"
+    output: 
+        "mapped_reads/se/{sample}.noduplicates.bam"
+    shell: 
         """
-        mkdir -p macs2_peaks
-        macs2 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs2_peaks
+        java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/se/{wildcards.sample}.dup_metrics.txt
+        """
+
+#remove duplicates using Picard’s MarkDuplicates for PE
+rule remove_duplicates_pe:
+    input: 
+        "mapped_reads/pe/{sample}.sorted.bam"
+    output: 
+        "mapped_reads/pe/{sample}.noduplicates.bam"
+    shell: 
+        """
+        java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/pe/{wildcards.sample}.dup_metrics.txt
+        """
+
+#call peaks using MacS2 for SE. Need to input a control I think but idk what it is
+rule macs2_se:
+    input: 
+        bam="mapped_reads/se/{sample}.noduplicates.bam"
+    output: 
+        "macs2_peaks/se/{sample}_peaks.narrowPeak"
+    shell: 
+        """
+        mkdir -p macs2_peaks/se
+        macs2 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs2_peaks/se
+        """
+
+#call peaks using MacS2 for PE. Need to input a control I think but idk what it is
+rule macs2_pe:
+    input: 
+        bam="mapped_reads/pe/{sample}.noduplicates.bam"
+    output: 
+        "macs2_peaks/pe/{sample}_peaks.narrowPeak"
+    shell: 
+        """
+        mkdir -p macs2_peaks/pe
+        macs2 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs2_peaks/pe
         """
 
 #filter out overlapping peaks using bedtools intersect to avoid overcounting
