@@ -52,6 +52,9 @@ https://github.com/broadinstitute/picard/releases/download/3.4.0/picard.jar
 
 
 
-
-
+install conda using this command:
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh
+bash ~/miniconda.sh -b -p $HOME/miniconda
+```
 
