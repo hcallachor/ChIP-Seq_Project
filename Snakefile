@@ -61,7 +61,7 @@ rule trimmomatic_se:
     shell:
         """ 
         mkdir -p trimmed 
-        java -jar ~/chipseq_project/Trimmomatic/trimmomatic-0.39.jar SE -phred33 {input} {output} SLIDINGWINDOW:4:30 MINLEN:35
+        java -jar ~/chipseq_project/Trimmomatic-0.39/trimmomatic-0.39.jar SE -phred33 {input} {output} SLIDINGWINDOW:4:30 MINLEN:35
         """
 
 #filter paired end reads by quality using Trimmomatic 
@@ -77,7 +77,7 @@ rule trimmomatic_pe:
     shell:
         """
         mkdir -p trimmed 
-        java -jar ~/chipseq_project/Trimmomatic/trimmomatic-0.39.jar PE -phred33 {input.r1} {input.r2} {output.r1_paired} {output.r1_unpaired} {output.r2_paired} {output.r2_unpaired} SLIDINGWINDOW:4:30 MINLEN:35
+        java -jar ~/chipseq_project/Trimmomatic-0.39/trimmomatic-0.39.jar PE -phred33 {input.r1} {input.r2} {output.r1_paired} {output.r1_unpaired} {output.r2_paired} {output.r2_unpaired} SLIDINGWINDOW:4:30 MINLEN:35
         """
 
 #index reference genome for BWA mapping
