@@ -2,10 +2,14 @@
 import os
 import yaml
 
+
+configfile: 'CompProjectconfig.yaml' #snakemake will pull info from this file
+
 #load the yaml file containing the metadata for the samples (paired vs single end)
-single_samples = config["Single End"]
-paired_samples = config["Paired End"]
-samples = config["SRAs"]
+single_samples = config["Single End"] #this algins with the formatting of the YAML for SINGLE END READS
+paired_samples = config["Paired End"] #this aligns with teh formatting of the YAML for PARIED END READS
+samples = config["SRAs"] #all of the samples are going to come in the form of an SRA
+reference_genome = config["Refrence Genome"]
 
 rule all:
     input:   
@@ -15,10 +19,10 @@ rule all:
 #get paired end fastq files from the sra accessions  
 rule fasterq_dump:    
     input:
-        "initial_data/{sample}/{sample}.sra"
+        "initial_data/{sample}/{sample}.sra" #this is the formatting of the folder made by SampleDownloadPFal.py 
     output:
-        "data/fastq/{sample}_1.fastq",
-        "data/fastq/{sample}_2.fastq"
+        "data/fastq/{sample}_1.fastq", # -1 signifies the forward reads
+        "data/fastq/{sample}_2.fastq" # -2 signifies the reverse reads 
     shell:
         """
         mkdir -p data/fastq
@@ -28,7 +32,7 @@ rule fasterq_dump:
 #get single end fastq files from sra accessions
 rule fasterq_dump_single:
     input:
-        "initial_data/{sample}/{sample}.sra"
+        "initial_data/{sample}/{sample}.sra" #this is the formatting of the folder made by SampleDownloadPFal.py 
     output:
         "data/fastq/{sample}.fastq"
     shell:
@@ -37,6 +41,8 @@ rule fasterq_dump_single:
         fasterq-dump {input} -O data/fastq
         """
 
+'''The sample fasterq-dump codes are designed to make file formatting similar between the single end and paired end'''
+
 #download the genome and annotations
 rule download_reference_genome:
     output:
@@ -44,8 +50,8 @@ rule download_reference_genome:
         gff="ref/P_falciparum3D7_annotations.gff3"
     shell:
         """
-        mkdir -p ref
-        datasets download genome accession GCF_000002765.6 --include gff3,genome --filename ref/ncbi_dataset.zip
+        mkdir -p ref #making the directory 
+        datasets download genome accession {reference_genome} --include gff3,genome --filename ref/ncbi_dataset.zip #ncbi datasets used to get accession
         unzip -o ref/ncbi_dataset.zip -d ref/ncbi_dataset
         cp ref/ncbi_dataset/ncbi_dataset/data/*/*genomic.fna {output.genome}
         cp ref/ncbi_dataset/ncbi_dataset/data/*/*genomic.gff {output.gff}
