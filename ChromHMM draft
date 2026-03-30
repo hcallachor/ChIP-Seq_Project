@@ -29,6 +29,17 @@ rule ChromHMM_model:
     output:
         outputdir=""
     shell:
+
+#filter out overlapping peaks using bedtools intersect to avoid overcounting
+rule bedtools_intersect:
+    input:
+        "macs3_peaks/{sample}_peaks.narrowPeak"
+    output:
+
+    shell:
+        """
+        bedtools intersect -v -a <> -b <> > unique_peaks.bed
+        """
         """
         java -mx4000M -jar ChromHMM.jar LearnModel {input.inputdir} {output.outputdir} 11 {input.assembly}
         """
