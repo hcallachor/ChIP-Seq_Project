@@ -50,8 +50,6 @@ java -jar picard.jar
 Picard MarkDupilcates was downloaded using this file:
 https://github.com/broadinstitute/picard/releases/download/3.4.0/picard.jar
 
-
-
 install conda using this command:
 ```bash
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
@@ -66,8 +64,15 @@ source ~/.bashrc
 conda init bash
 ```
 
-Install Macs2:
+Install Macs3:
 ```bash
-conda install bioconda::macs2
+conda install -c bioconda macs3
+```
+
+Create and activate conda environment:
+```bash
+conda create -n macs3_env python=3.9
+conda activate macs3_env
+conda install -c bioconda -c conda-forge macs3
 ```
 
