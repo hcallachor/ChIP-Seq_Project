@@ -19,7 +19,7 @@ python ./SampleDownloadPFal.py
 ```
 To run the Snakefile in background with a log file outputted
 ```bash
-nohup snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml > snakemake.log 2>&1 &
+nohup snakemake -s snakefile -c 4 --configfile CompProjectconfig.yaml > snakemake.log 2>&1 &
 ```
 
 To run the Snakefile cleanup
@@ -54,7 +54,26 @@ https://github.com/broadinstitute/picard/releases/download/3.4.0/picard.jar
 
 install conda using this command:
 ```bash
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+```
+
+set conda path:
+```bash
 bash ~/miniconda.sh -b -p $HOME/miniconda
+export PATH="$HOME/miniconda/bin:$PATH"
+echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+conda init bash
+```
+
+Create and activate conda environment:
+```bash
+conda create -n chipseq
+conda activate chipseq
+```
+
+Install Macs2:
+```bash
+conda install bioconda::macs2
 ```
 
