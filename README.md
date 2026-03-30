@@ -24,7 +24,7 @@ nohup snakemake -s snakefile -c 4 --configfile CompProjectconfig.yaml > snakemak
 
 To run the Snakefile cleanup
 ```bash
-snakemake -c 1 cleanup
+snakemake cleanup --cores 1 --configfile CompProjectconfig.yaml
 ```
 
 To See What Rules your Snakefile Can See:
