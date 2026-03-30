@@ -9,8 +9,8 @@ samples = config["SRAs"]
 
 rule all:
     input:   
-        expand("macs2_peaks/se/{sample}_peaks.narrowPeak", sample=single_samples) +
-        expand("macs2_peaks/pe/{sample}_peaks.narrowPeak", sample=paired_samples)
+        expand("macs3_peaks/se/{sample}_peaks.narrowPeak", sample=single_samples) +
+        expand("macs3_peaks/pe/{sample}_peaks.narrowPeak", sample=paired_samples)
 
 #get paired end fastq files from the sra accessions  
 rule fasterq_dump:    
@@ -187,34 +187,34 @@ rule remove_duplicates_pe:
         java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/pe/{wildcards.sample}.dup_metrics.txt
         """
 
-#call peaks using MacS2 for SE. Need to input a control I think but idk what it is
-rule macs2_se:
+#call peaks using MacS3 for SE. Need to input a control I think but idk what it is
+rule macs3_se:
     input: 
         bam="mapped_reads/se/{sample}.noduplicates.bam"
     output: 
-        "macs2_peaks/se/{sample}_peaks.narrowPeak"
+        "macs3_peaks/se/{sample}_peaks.narrowPeak"
     shell: 
         """
-        mkdir -p macs2_peaks/se
-        macs2 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs2_peaks/se
+        mkdir -p macs3_peaks/se
+        macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/se
         """
 
-#call peaks using MacS2 for PE. Need to input a control I think but idk what it is
-rule macs2_pe:
+#call peaks using MacS3 for PE. Need to input a control I think but idk what it is
+rule macs3_pe:
     input: 
         bam="mapped_reads/pe/{sample}.noduplicates.bam"
     output: 
-        "macs2_peaks/pe/{sample}_peaks.narrowPeak"
+        "macs3_peaks/pe/{sample}_peaks.narrowPeak"
     shell: 
         """
-        mkdir -p macs2_peaks/pe
-        macs2 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs2_peaks/pe
+        mkdir -p macs3_peaks/pe
+        macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/pe
         """
 
 #filter out overlapping peaks using bedtools intersect to avoid overcounting
 rule bedtools_intersect:
     input:
-        "macs2_peaks/{sample}_peaks.narrowPeak"
+        "macs3_peaks/{sample}_peaks.narrowPeak"
     output:
 
     shell:
@@ -225,7 +225,7 @@ rule bedtools_intersect:
 rule pybedtools_jaccard:
     input:
         provided_BED="provided_BED/{sample}.bed",
-        our_BED="macs2_peaks/{sample}_peaks.narrowPeak"
+        our_BED="macs3_peaks/{sample}_peaks.narrowPeak"
     output:
         "results.jaccard"
     shell:
@@ -242,6 +242,6 @@ rule cleanup:
         rm -rf ncbi_dataset ncbi_dataset.zip
         rm -rf ref
         rm -rf data/fastq
-        rm -rf trimmed mapped_reads macs2_peaks
+        rm -rf trimmed mapped_reads macs3_peaks
         rm -rf .snakemake
         """
