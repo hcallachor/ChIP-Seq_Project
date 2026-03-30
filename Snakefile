@@ -217,16 +217,6 @@ rule macs3_pe:
         macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/pe
         """
 
-#filter out overlapping peaks using bedtools intersect to avoid overcounting
-rule bedtools_intersect:
-    input:
-        "macs3_peaks/{sample}_peaks.narrowPeak"
-    output:
-
-    shell:
-        """
-        bedtools intersect -v -a <> -b <> > unique_peaks.bed
-        """
 #overlay the BED files containing our BED output onto the BED files containing the paper-provided BED output to see where they intersect with pybedtools jaccard
 rule pybedtools_jaccard:
     input:
