@@ -224,7 +224,9 @@ rule chrom_sizes:
     output:
         "chromsizes.genome"
     shell:
-        samtools faidx {input.genome} | cut -f1,2 P_falciparum3D7.fa.fai > chromsizes.genome
+        """
+        samtools faidx {input.genome} | cut -f1,2 {input.genome}.fai > chromsizes.genome
+        """
 
 #convert paired end BED files to bigBed format to be more compatible with UCSC genome browser
 #not totally sure this is correct but I tried following the steps from the UCSC website https://genome.ucsc.edu/goldenpath/help/bigBed.html
