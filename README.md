@@ -26,6 +26,10 @@ Example to run:
 python ./SampleDownloadV2.py
 ```
 To run the Snakefile in background with a log file outputted
+Must run with the conda Macs3 environment activated
+```bash
+conda activate macs3_env
+```
 ```bash
 nohup snakemake -s snakefile -c 4 --configfile CompProjectconfig.yaml > snakemake.log 2>&1 &
 ```
