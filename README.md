@@ -1,6 +1,20 @@
 Hello thank you for using our repo!
 This snakemake pipeline is intended to analyze ChIP-seq and ATAC-seq data for the species Plasmodium falciparum.
 
+To clone this repo, first log into git using:
+```bash
+git config --global user.name 'example'
+```
+and
+```bash
+git config --global user.email 'example@example.com'
+```
+
+then clone this repo using the command:
+```bash
+git clone https://github.com/hcallachor/ChIP-Seq_Project
+```
+
 To Begin:
 You need to add your samples to the "YourSamplesHere.yaml"
 First: open the YourSamplesHere.yaml
@@ -19,20 +33,6 @@ To adapt the Sample Download code to other samples, the list at line 19 can be c
 Please check that SampleDownloadV2.py is in your current working directory before using ./
 Otherwise list full path
 Additionally, if you need to change the reference genome you wish to use, this is under the output dictionary 
-
-To clone this repo, first log into git using:
-```bash
-git config --global user.name 'example'
-```
-and
-```bash
-git config --global user.email 'example@example.com'
-```
-
-then clone this repo using the command:
-```bash
-git clone https://github.com/hcallachor/ChIP-Seq_Project
-```
 
 Example to run:
 ```bash
