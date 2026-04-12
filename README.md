@@ -1,12 +1,26 @@
 Hello thank you for using our repo!
 This snakemake pipeline is intended to analyze ChIP-seq and ATAC-seq data for the species Plasmodium falciparum.
 
+To clone this repo, first log into git using:
+```bash
+git config --global user.name 'example'
+```
+and
+```bash
+git config --global user.email 'example@example.com'
+```
+
+then clone this repo using the command:
+```bash
+git clone https://github.com/hcallachor/ChIP-Seq_Project
+```
+
 To Begin:
 You need to add your samples to the "YourSamplesHere.yaml"
 First: open the YourSamplesHere.yaml
 Next: add the SRAs you plan to use, there is a formatting example inside the YourSamplesHere.yaml
 This yaml connects to the sample download code to begin downloading the data you would like to use. 
-You should not need to make any edits to the SampleDownloadV2.py code itself, expect for adding the reference genome if
+You should not need to make any edits to the SampleDownloadV2.py code itself, except for adding the reference genome if
 you plan to work with something other than Plasmodium falciparum
 
 SampleDownload.py:
@@ -20,7 +34,6 @@ Please check that SampleDownloadV2.py is in your current working directory befor
 Otherwise list full path
 Additionally, if you need to change the reference genome you wish to use, this is under the output dictionary 
 
-
 Example to run:
 ```bash
 python ./SampleDownloadV2.py
@@ -31,7 +44,7 @@ Must run with the conda Macs3 environment activated
 conda activate macs3_env
 ```
 ```bash
-nohup snakemake -s snakefile -c 4 --configfile CompProjectconfig.yaml > snakemake.log 2>&1 &
+nohup snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml > snakemake.log 2>&1 &
 ```
 
 To run the Snakefile cleanup
