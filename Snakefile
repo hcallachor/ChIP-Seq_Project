@@ -13,8 +13,9 @@ reference_genome = config["Reference Genome"]
 
 rule all:
     input:   
-        expand("macs3_peaks/se/{sample}_peaks.narrowPeak", sample=single_samples) +
-        expand("macs3_peaks/pe/{sample}_peaks.narrowPeak", sample=paired_samples)
+        # expand("results/{sample}.jaccard", sample=paired_samples), 
+        expand("bigbed/pe/{sample}.bb", sample=paired_samples)
+        
 
 #get paired end fastq files from the sra accessions  
 rule fasterq_dump:    
@@ -221,24 +222,33 @@ rule macs3_pe:
 #not 100% sure I did this correct
 rule chrom_sizes:
     input:
-        genome="{reference_genome}"
+        genome="ref/P_falciparum3D7.fa"
     output:
         "chromsizes.genome"
     shell:
         """
-        samtools faidx {input.genome} | cut -f1,2 {input.genome}.fai > chromsizes.genome
+        samtools faidx {input.genome}
+        cut -f1,2 {input.genome}.fai > {output}
         """
 
 #convert paired end BED files to bigBed format to be more compatible with UCSC genome browser
 #not totally sure this is correct but I tried following the steps from the UCSC website https://genome.ucsc.edu/goldenpath/help/bigBed.html
 rule bed_to_bigbed_pe:
     input:
-        "macs3_peaks/pe/{sample}_peaks.narrowPeak"
+        peaks = "macs3_peaks/pe/{sample}_peaks.narrowPeak",
+        sizes = "chromsizes.genome"
     output:
-        "bigbed/pe/{sample}.bb"
+        bb = "bigbed/pe/{sample}.bb"
     shell:
         """
-        sort -k1,1 -k2,2n input.narrowPeak > sorted.narrowPeak | bedToBigBed -type=bed6+4 -as=narrowPeak.as -tab sorted.narrowPeak chromsizes.genome output.bb
+        mkdir -p bigbed/pe
+        # Sort and cap scores at 1000 for UCSC compatibility
+        sort -k1,1 -k2,2n {input.peaks} | \
+        awk 'BEGIN{{OFS="\\t"}} {{if($5>1000) $5=1000; print}}' > {input.peaks}.sorted
+        
+        bedToBigBed -type=bed6+4 -as=narrowPeak.as -tab {input.peaks}.sorted {input.sizes} {output.bb}
+        
+        rm {input.peaks}.sorted
         """
 
 #convert single end BED files to bigBed format
@@ -255,15 +265,13 @@ rule bed_to_bigbed_se:
 #overlay the BED files containing our BED output onto the BED files containing the paper-provided BED output to see where they intersect with pybedtools jaccard
 rule pybedtools_jaccard:
     input:
-        provided_BED="provided_BED/{sample}.bed",
-        our_BED="macs3_peaks/{sample}_peaks.narrowPeak"
+        provided_BED = "provided_BED/{sample}.bed",
+        our_BED = "macs3_peaks/pe/{sample}_peaks.narrowPeak"
     output:
-        "results.jaccard"
+        "results/{sample}.jaccard" # The output now includes the wildcard
     shell:
         """
-        bedtools jaccard -a <{input.provided_BED[0]}> -b <{input.our_BED[0]}> > results.jaccard
-        bedtools jaccard -a <{input.provided_BED[1]}> -b <{input.our_BED[1]}> >> results.jaccard
-        bedtools jaccard -a <{input.provided_BED[2]}> -b <{input.our_BED[2]}> >> results.jaccard
+        bedtools jaccard -a {input.provided_BED} -b {input.our_BED} > {output}
         """
 
 #cleanup rule to remove files and run snakemake again
