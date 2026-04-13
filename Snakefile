@@ -13,8 +13,10 @@ reference_genome = config["Reference Genome"]
 
 rule all:
     input:   
-        # expand("results/{sample}.jaccard", sample=paired_samples), 
-        expand("bigbed/pe/{sample}.bb", sample=paired_samples)
+        expand("bigbed/pe/{sample}.bb", sample=paired_samples),
+        expand("bigbed/se/{sample}.bb", sample=single_samples),
+        expand("results/jaccard/pe/{sample}.jaccard", sample=paired_samples),
+        expand("results/jaccard/se/{sample}.jaccard", sample=single_samples)
         
 
 #get paired end fastq files from the sra accessions  
@@ -232,7 +234,6 @@ rule chrom_sizes:
         """
 
 #convert paired end BED files to bigBed format to be more compatible with UCSC genome browser
-#not totally sure this is correct but I tried following the steps from the UCSC website https://genome.ucsc.edu/goldenpath/help/bigBed.html
 rule bed_to_bigbed_pe:
     input:
         peaks = "macs3_peaks/pe/{sample}_peaks.narrowPeak",
@@ -254,15 +255,17 @@ rule bed_to_bigbed_pe:
 #convert single end BED files to bigBed format
 rule bed_to_bigbed_se:
     input:
-        "macs3_peaks/se/{sample}_peaks.narrowPeak"
+        peaks = "macs3_peaks/se/{sample}_peaks.narrowPeak",
+        sizes = "chromsizes.genome"
     output:
-        "bigbed/se/{sample}.bb"
+        bb = "bigbed/se/{sample}.bb"
     shell:
         """
-        sort -k1,1 -k2,2n input.narrowPeak > sorted.narrowPeak | bedToBigBed -type=bed6+4 -as=narrowPeak.as -tab sorted.narrowPeak chromsizes.genome output.bb
+        sort -k1,1 -k2,2n {input.peaks} > {input.peaks}.sorted | bedToBigBed -type=bed6+4 -as=narrowPeak.as -tab {input.peaks}.sorted {input.sizes} {output.bb}
         """
 
 #overlay the BED files containing our BED output onto the BED files containing the paper-provided BED output to see where they intersect with pybedtools jaccard
+#I am working on this so this doesnt work yet
 rule pybedtools_jaccard:
     input:
         provided_BED = "provided_BED/{sample}.bed",
@@ -285,5 +288,6 @@ rule cleanup:
         rm -rf trimmed 
         rm -rf mapped_reads 
         rm -rf macs3_peaks
+        rm -rf bigbed
         rm -rf .snakemake
         """
