@@ -2,7 +2,6 @@
 import os
 import yaml
 
-
 configfile: 'CompProjectconfig.yaml' #snakemake will pull info from this file
 
 #load the yaml file containing the metadata for the samples (paired vs single end)
@@ -247,19 +246,6 @@ rule merge_peaks_by_timepoint:
         cat {input} | sort -k1,1 -k2,2n | bedtools merge -i stdin > {output}
         """
 
-#overlay the merged tim epoint BED files onto the BED files containing the paper-provided BED output to see where they intersect with pybedtools jaccard
-rule jaccard_by_timepoint:
-    input:
-        provided_BED = "provided_BED/{timepoint}.bed", 
-        our_merged_BED = "merged_peaks/{timepoint}_merged.bed"
-    output:
-        "results/jaccard/merged/{timepoint}.jaccard"
-    shell:
-        """
-        mkdir -p results/jaccard/merged
-        bedtools jaccard -a {input.provided_BED} -b {input.our_merged_BED} > {output}
-        """
-
 #create the chromosome length file to be used in bedtobigbed
 #not 100% sure I did this correct
 rule chrom_sizes:
@@ -298,6 +284,6 @@ rule cleanup:
         rm -rf trimmed 
         rm -rf mapped_reads 
         rm -rf macs3_peaks
-        rm -rf bigbed
+        rm -rf merged_peaks
         rm -rf .snakemake
         """
