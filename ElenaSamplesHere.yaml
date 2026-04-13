@@ -1,0 +1,86 @@
+SRAs:
+- SRR065652
+- SRR065654
+- SRR065655
+- SRR11292858
+- SRR11292884
+- SRR11292869
+- SRR11292863
+- SRR11292885
+- SRR11292870
+- SRR11292874
+- SRR11292886
+- SRR11292871
+- SRR11292883
+- SRR11292887
+- SRR11292872
+- SRR851676
+- SRR16021006
+- SRR16021014
+- SRR6055328
+- SRR6055332
+- SRR6055334
+- SRR851672
+- SRR16021010
+- SRR065656
+- SRR065658
+- SRR065659
+Single End:
+- SRR065652
+- SRR065654
+- SRR065655
+- SRR851676
+- SRR851672
+- SRR065656
+- SRR065658
+- SRR065659
+Paired End:
+- SRR11292858
+- SRR11292884
+- SRR11292869
+- SRR11292863
+- SRR11292885
+- SRR11292870
+- SRR11292874
+- SRR11292886
+- SRR11292871
+- SRR11292883
+- SRR11292887
+- SRR11292872
+- SRR16021006
+- SRR16021014
+- SRR6055328
+- SRR6055332
+- SRR6055334
+- SRR16021010
+Reference Genome:
+- GCF_000002765.6
+
+Timepoint_Mapping:
+  SRR065652: "10hpi_chrom-states"
+  SRR11292858: "10hpi_chrom-states"
+  SRR065656: "10hpi_chrom-states"
+  SRR11292863: "10hpi_chrom-states"
+  SRR11292874: "10hpi_chrom-states"
+  SRR11292883: "10hpi_chrom-states"
+  SRR851672: "10hpi_chrom-states"
+  SRR16021006: "10hpi_chrom-states"
+  SRR6055328: "10hpi_chrom-states"
+  SRR065654: "30hpi_chrom-states"
+  SRR11292884: "30hpi_chrom-states"
+  SRR065658: "30hpi_chrom-states"
+  SRR11292885: "30hpi_chrom-states"
+  SRR11292886: "30hpi_chrom-states"
+  SRR11292887: "30hpi_chrom-states"
+  SRR851672: "30hpi_chrom-states"
+  SRR16021010: "30hpi_chrom-states"
+  SRR6055332: "30hpi_chrom-states"
+  SRR065655: "40hpi_chrom-states"
+  SRR11292869: "40hpi_chrom-states"
+  SRR065659: "40hpi_chrom-states"
+  SRR11292870: "40hpi_chrom-states"
+  SRR11292871: "40hpi_chrom-states"
+  SRR1292872: "40hpi_chrom-states"
+  SRR851676: "40hpi_chrom-states"
+  SRR16021014: "40hpi_chrom-states"
+  SRR6055334: "40hpi_chrom-states"
