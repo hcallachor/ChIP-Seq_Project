@@ -2,20 +2,13 @@
 #formatting -'SRA-NUMBER' on each line
 
 #example
-# -'A sample'
-# -'Another Sample'
+# - A sample
+# - Another Sample
 
-#- 'SRR057262'
-#- 'SRR057268'
-#- 'SRR6055333'
+#- SRR057262
+#- SRR057268
+#- SRR6055333
 
-- SRR25269586
-- SRR25269585  
-- SRR25269584  
-- SRR25269557  
-- SRR25269558
-- SRR25269559
+
 - SRR25269560  
-- SRR25269561
-- SRR25269562  
-- SRR25269563
+
