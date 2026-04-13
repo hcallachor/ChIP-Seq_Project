@@ -15,6 +15,23 @@ then clone this repo using the command:
 git clone https://github.com/hcallachor/ChIP-Seq_Project
 ```
 
+Tools used in this pipeline:
+| Tool | Version |
+|------|--------|
+| Snakemake | 7.32.4 |
+| PyYAML | python module |
+| fasterq-dump | 3.0.3 |
+| Trimmomatic | 0.39 |
+| BWA | 0.7.17-r1188 |
+| Samtools | 1.19.2 |
+| Picard (MarkDuplicates) | 3.4.0 |
+| MACS3 | 3.0.3 |
+| Bedtools | 2.31.1 |
+| bedToBigBed | 2.10 |
+| Conda | 26.1.1 |
+| Python | 3.9.25 |
+| Java | 21.0.10 |
+
 To Begin:
 You need to add your samples to the "YourSamplesHere.yaml"
 First: open the YourSamplesHere.yaml
