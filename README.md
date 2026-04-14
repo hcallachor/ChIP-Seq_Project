@@ -1,7 +1,12 @@
 Hello thank you for using our repo!
-This snakemake pipeline is intended to analyze ChIP-seq and ATAC-seq data for the species Plasmodium falciparum.
 
-To clone this repo, first log into git using:
+This Snakemake pipeline is intended to analyze ChIP-seq and ATAC-seq data for the species Plasmodium falciparum.
+
+---
+
+## Clone the repository
+
+Before cloning, configure your Git identity:
 ```bash
 git config --global user.name 'example'
 ```
@@ -10,12 +15,12 @@ and
 git config --global user.email 'example@example.com'
 ```
 
-then clone this repo using the command:
+Then clone the repository using this command:
 ```bash
 git clone https://github.com/hcallachor/ChIP-Seq_Project
 ```
 
-Tools used in this pipeline:
+## Tools used in this pipeline:
 | Tool | Version |
 |------|--------|
 | Snakemake | 7.32.4 |
@@ -32,85 +37,146 @@ Tools used in this pipeline:
 | Python | 3.9.25 |
 | Java | 21.0.10 |
 
-To Begin:
-You need to add your samples to the "YourSamplesHere.yaml"
-First: open the YourSamplesHere.yaml
+## To Begin
 
-Next: add the SRAs you plan to use, there is a formatting example inside the YourSamplesHere.yaml
+### 1. Configure your samples
+   
+Edit the file:
+
+```
+YourSamplesHere.yaml
+```
 
 This yaml connects to the sample download code to begin downloading the data you would like to use. 
-You should not need to make any edits to the SampleDownloadV2.py code itself, except for adding the reference genome if
-you plan to work with something other than Plasmodium falciparum
 
-For quick testing of the pipeline, we recommend using "SRR34020775" which is already listed in "YourSamplesHere.yaml", as it is a very small sample file capable of running in ~2 minutes.
+You should not need to make any edits to the SampleDownload.py code itself, except for adding the reference genome if you plan to work with something other than Plasmodium falciparum.
 
-To install the yaml functionality, use the following command:
+Add the **SRA IDs** you want to analyze.  
+An example format is already included in the file.
+
+---
+
+### Sample test dataset
+
+For quick testing of the pipeline, use:
+
+**SRR34020775**
+
+This dataset is very small and should run in ~2 minutes.
+
+---
+
+### 2. Install Python dependency
+
+To install the YAML functionality, use the following command:
 ```bash
 pip install PyYAML
 ```
 
-SampleDownload.py:
-This Script is made to download the initial data to run through the pipeline and create the config file needed for the pipeline. 
+---
 
-It will create a directory to store samples called 
-"initial_data"
+### 3. Download sample data
+Run the download script:
 
-The function will use the operating system to check for the directory. 
-
-Subproccess allows for the running of commandline tool from within Python. 
-
-To adapt the Sample Download code to other samples, the list at line 19 can be changed to other SRR/SRA numbers
-Please check that SampleDownload.py is in your current working directory before using ./
-Otherwise list full path
-Additionally, if you need to change the reference genome you wish to use, this is under the output dictionary 
-
-Example to run:
 ```bash
 python ./SampleDownload.py
 ```
-To run the Snakefile in background with a log file outputted
-Must run with the conda Macs3 environment activated (if conda has not yet been installed, see directions at the end)
+
+### What it does:
+- Creates a directory called **initial_data/**
+- Reads SRA IDs from `YourSamplesHere.yaml`
+- Downloads sequencing data using SRA tools
+- Generates the config file for Snakemake
+
+**Implementation notes:**
+- Uses Python `subprocess` to run command-line tools
+- Checks and creates directories using the operating system
+- SRA list can be modified inside the script (line 19)
+- Reference genome settings are defined in the output dictionary
+
+---
+
+## Running the pipeline
+
+### Activate Conda environment
+(if conda has not yet been installed, see directions at the end)
+
 ```bash
 conda activate macs3_env
 ```
+
+### Run Snakemake (background mode)
+
 ```bash
 nohup snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml > snakemake.log 2>&1 &
 ```
 
-To run the Snakefile cleanup
+---
+
+### Run cleanup workflow
 ```bash
 snakemake cleanup -c 1 --configfile CompProjectconfig.yaml
 ```
 
-To See What Rules your Snakefile Can See:
+---
+
+### List available rules
+
 ```bash
 snakemake --list
 ```
 
-Trimmomatic Notes:
-Your environment needs Java to run Trimmomatic, an example that downloads Trimmomatic is as follows:
+---
 
+## Software notes
+
+### Trimmomatic
+
+Requires Java.
+
+```bash
 java -jar trimmomatic-0.39.jar
+```
 
-Please See https://github.com/usadellab/Trimmomatic/blob/main/README.md For Further Details and to Download trimmomatic-0.39.jar
+Please see the link below for further details and to download trimmomatic-0.39.jar:
+https://github.com/usadellab/Trimmomatic
 
-trimmomatic was downloaded using this zip file:
-http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip
+---
 
-Picard MarkDupilcates Notes:
-Your environment needs Java to run Picard MarkDuplicates, an example that downloads Picard MarkDuplicates is as follows:
+### Picard MarkDuplicates
 
-java -jar picard.jar 
+Requires Java.
 
-Picard MarkDupilcates was downloaded using this file:
+```bash
+java -jar picard.jar
+```
+
+Please see the link below for further details and to download:
 https://github.com/broadinstitute/picard/releases/download/3.4.0/picard.jar
 
+---
+
+### bedToBigBed
+
+```bash
+wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bedToBigBed
+```
+After a bigBed file is created, it needs to be hosted on a web server in order to be compatible with the UCSC Genome Browser. A convenient option is to upload the bigBed file to GitHub, then copy the raw file URL and paste it into the custom tracks function found under the "My Data" tab of the genome browser website.
+
+---
+
+## Conda setup
+
+### Install Miniconda
+
 install conda using this command:
+
 ```bash
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
 ```
 
 set conda path:
+
 ```bash
 bash ~/miniconda.sh -b -p $HOME/miniconda
 export PATH="$HOME/miniconda/bin:$PATH"
@@ -119,21 +185,22 @@ source ~/.bashrc
 conda init bash
 ```
 
-Install Macs3:
-```bash
-conda install -c bioconda macs3
-```
+---
 
-Install bedToBigBed:
-```bash
-wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bedToBigBed
-```
-After a bigBed file is created, it needs to be hosted on a web server in order to be compatible with the UCSC Genome Browser. A convenient option is to upload the bigBed file to GitHub, then copy the raw file URL and paste it into the custom tracks function found under the "My Data" tab of the genome browser website.
+### Create environment and intsall macs3
 
-Create and activate conda environment:
 ```bash
 conda create -n macs3_env python=3.9
 conda activate macs3_env
 conda install -c bioconda -c conda-forge macs3
 ```
+
+---
+
+## Notes
+
+- Java is required for Trimmomatic and Picard
+- Always activate the conda environment before running Snakemake
+- Ensure `YourSamplesHere.yaml` is properly formatted
+- Modify reference genome settings in `SampleDownload.py` if needed
 
