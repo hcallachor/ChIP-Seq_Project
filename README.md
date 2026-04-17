@@ -9,9 +9,6 @@ This Snakemake pipeline is intended to analyze ChIP-seq and ATAC-seq data for th
 Before cloning, configure your Git identity:
 ```bash
 git config --global user.name 'example'
-```
-and
-```bash
 git config --global user.email 'example@example.com'
 ```
 
