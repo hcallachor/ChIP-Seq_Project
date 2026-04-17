@@ -219,7 +219,6 @@ rule macs3_pe:
         """
 
 #create the chromosome length file to be used in bedtobigbed
-#not 100% sure I did this correct
 rule chrom_sizes:
     input:
         genome="ref/P_falciparum3D7.fa"
