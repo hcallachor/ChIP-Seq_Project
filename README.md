@@ -1,10 +1,14 @@
-Hello thank you for using our repo!
+# Welcome to the "PlasmodiumPeakProcess" Github
 
-This Snakemake pipeline is intended to analyze ChIP-seq and ATAC-seq data for the species Plasmodium falciparum.
+This Snakemake pipeline is intended to analyze ChIP-seq and ATAC-seq data for the species *Plasmodium falciparum*.
 
----
+
+
+
+
 
 ## Clone the repository
+We recommend cloning this to your machine. Follow the instructions below. 
 
 Before cloning, configure your Git identity:
 ```bash
@@ -16,6 +20,11 @@ Then clone the repository using this command:
 ```bash
 git clone https://github.com/hcallachor/ChIP-Seq_Project
 ```
+
+
+---
+
+ Before using the pipeline, please ensure you have the following tools downloaded. This document includes instructions on how to download the tools.
 
 ## Tools used in this pipeline:
 | Tool | Version |
@@ -34,98 +43,41 @@ git clone https://github.com/hcallachor/ChIP-Seq_Project
 | Python | 3.9.25 |
 | Java | 21.0.10 |
 
-## To Begin
-
-### 1. Configure your samples
-   
-Edit the file:
-
-```
-YourSamplesHere.yaml
-```
-
-This yaml connects to the sample download code to begin downloading the data you would like to use. 
-
-You should not need to make any edits to the SampleDownload.py code itself, except for adding the reference genome if you plan to work with something other than Plasmodium falciparum.
-
-Add the **SRA IDs** you want to analyze.  
-An example format is already included in the file.
-
 ---
 
-### Sample test dataset
+## Directions to Install Softwares
 
-For quick testing of the pipeline, use:
+### Install Miniconda (Conda)
 
-**SRR34020775**
-
-This dataset is very small and should run in ~2 minutes.
-
----
-
-### 2. Install Python dependency
-
-To install the YAML functionality, use the following command:
-```bash
-pip install PyYAML
-```
-
----
-
-### 3. Download sample data
-Run the download script:
+install conda using this command:
 
 ```bash
-python ./SampleDownload.py
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
 ```
 
-### What it does:
-- Creates a directory called **initial_data/**
-- Reads SRA IDs from `YourSamplesHere.yaml`
-- Downloads sequencing data using SRA tools
-- Generates the config file for Snakemake
-
-**Implementation notes:**
-- Uses Python `subprocess` to run command-line tools
-- Checks and creates directories using the operating system
-- SRA list can be modified inside the script (line 19)
-- Reference genome settings are defined in the output dictionary
-
----
-
-## Running the pipeline
-
-### Activate Conda environment
-(if conda has not yet been installed, see directions at the end)
+set conda path:
 
 ```bash
-conda activate macs3_env
-```
-
-### Run Snakemake (background mode)
-
-```bash
-nohup snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml > snakemake.log 2>&1 &
+bash ~/miniconda.sh -b -p $HOME/miniconda
+export PATH="$HOME/miniconda/bin:$PATH"
+echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+conda init bash
 ```
 
 ---
 
-### Run cleanup workflow
+### Install OpenJDK from conda-forge
+This is a version of java you can obtain through conda
+
 ```bash
-snakemake cleanup -c 1 --configfile CompProjectconfig.yaml
+conda install -c conda-forge openjdk
+
+# Verify installation
+java -version
 ```
 
 ---
-
-### List available rules
-
-```bash
-snakemake --list
-```
-
----
-
-## Software notes
 
 ### Trimmomatic
 
@@ -162,29 +114,7 @@ After a bigBed file is created, it needs to be hosted on a web server in order t
 
 ---
 
-## Conda setup
-
-### Install Miniconda
-
-install conda using this command:
-
-```bash
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
-```
-
-set conda path:
-
-```bash
-bash ~/miniconda.sh -b -p $HOME/miniconda
-export PATH="$HOME/miniconda/bin:$PATH"
-echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-conda init bash
-```
-
----
-
-### Create environment and intsall macs3
+### Create environment and install macs3
 
 ```bash
 conda create -n macs3_env python=3.9
@@ -193,6 +123,113 @@ conda install -c bioconda -c conda-forge macs3
 ```
 
 ---
+
+### Create a Python Environment for running this pipeline
+
+```bash
+conda create -n my_environment python=3.9 -y
+conda activate my_environment
+```
+
+---
+
+### Install PyYAML
+
+```bash
+conda install -c conda-forge pyyaml
+```
+
+---
+
+## To Begin Using the Pipeline
+
+### 1. Configure your samples
+   
+Edit the file:
+
+```
+YourSamplesHere.yaml
+```
+
+This yaml connects to the sample download code to begin downloading the data you would like to use. 
+
+You should not need to make any edits to the SampleDownload.py code itself, except for adding the reference genome if you plan to work with something other than *Plasmodium falciparum*.
+
+Add the **SRA IDs** you want to analyze.  
+An example format is already included in the file.
+
+---
+
+### Sample test dataset
+
+For quick testing of the pipeline, use:
+
+**SRR34020775**
+
+This dataset is very small and should run in ~2 minutes.
+
+---
+
+
+### 2. Download sample data
+Run the download script:
+
+```bash
+python ./SampleDownload.py
+```
+
+### What it does:
+- Creates a directory called **initial_data/**
+- Reads SRA IDs from `YourSamplesHere.yaml`
+- Downloads sequencing data using SRA tools
+- Generates the config file for Snakemake
+
+**Implementation notes:**
+- Uses Python `subprocess` to run command-line tools
+- Checks and creates directories using the operating system
+- SRA list can be modified inside the script (line 19)
+- Reference genome settings are defined in the output dictionary
+
+---
+
+## Running the pipeline
+
+### Activate Conda environment
+
+
+```bash
+conda activate macs3_env
+```
+
+### Run Snakemake
+
+```bash
+snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml
+```
+
+### Run Snakemake (background mode)
+
+```bash
+nohup snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml 
+```
+
+---
+
+### Run cleanup workflow
+```bash
+snakemake cleanup -c 1 --configfile CompProjectconfig.yaml
+```
+
+---
+
+### List available rules
+
+```bash
+snakemake --list
+```
+
+---
+
 
 ## Notes
 
