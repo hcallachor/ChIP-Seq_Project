@@ -194,7 +194,7 @@ rule remove_duplicates_pe:
         java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/pe/{wildcards.sample}.dup_metrics.txt
         """
 
-#call peaks using MacS3 for SE. Need to input a control I think but idk what it is
+#call peaks using MacS3 for SE
 rule macs3_se:
     input: 
         bam="mapped_reads/se/{sample}.noduplicates.bam"
@@ -206,7 +206,7 @@ rule macs3_se:
         macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/se
         """
 
-#call peaks using MacS3 for PE. Need to input a control I think but idk what it is
+#call peaks using MacS3 for PE
 rule macs3_pe:
     input: 
         bam="mapped_reads/pe/{sample}.noduplicates.bam"
