@@ -38,7 +38,7 @@ git clone https://github.com/hcallachor/ChIP-Seq_Project
 | Picard (MarkDuplicates) | 3.4.0 |
 | MACS3 | 3.0.3 |
 | Bedtools | 2.31.1 |
-| bedToBigBed | 2.10 |
+| bedGraphToBigWig | 2.10 |
 | Conda | 26.1.1 |
 | Python | 3.9.25 |
 | Java | 21.0.10 |
@@ -115,10 +115,10 @@ conda install -c bioconda -c conda-forge macs3
 
 ---
 
-### bedGraphToBigWig
-
+### Create environment and install bedGraphToBigWig
 ```bash
 conda install bioconda::ucsc-bedgraphtobigwig
+conda install -c bioconda -c conda-forge ucsc-bedgraphtobigwig openssl=1.0
 ```
 After macs3 is run files need to be converted into bedGraph format and then bigwig format in order to be run through the UCSC genome browser. These files need to be hosted on a web server in order to be compatible with the UCSC Genome Browser. A convenient option is to upload the bigwig file to GitHub, then copy the raw file URL and paste it into the custom tracks function found under the "My Data" tab of the genome browser website.
 
@@ -193,13 +193,6 @@ python ./SampleDownload.py
 ---
 
 ## Running the pipeline
-
-### Activate Conda environment
-
-
-```bash
-conda activate macs3_env
-```
 
 ### Run Snakemake
 
