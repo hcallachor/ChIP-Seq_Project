@@ -110,7 +110,7 @@ rule bwa_mapping_se: #use -M in command to make it compatible with Picard, and p
     shell:
         """
         mkdir -p mapped_reads/se 
-        bwa mem -M {input.genome} {input.fastq} | samtools view -bS - > {output}
+        bwa mem -M -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tLB:lib1\\tPL:ILLUMINA' {input.genome} {input.fastq} | samtools view -bS - > {output}
         """
 
 #map reads to reference genome using BWA-MEM for paired end reads
@@ -125,7 +125,7 @@ rule bwa_mapping_pe:
     shell:
         """
         mkdir -p mapped_reads/pe
-        bwa mem -M {input.genome} {input.r1} {input.r2} | samtools view -bS - > {output}
+        bwa mem -M -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tLB:lib1\\tPL:ILLUMINA' {input.genome} {input.r1} {input.r2} | samtools view -bS - > {output}
         """
 
 #quality filter SE bam files by Phred quality score 30 using samtools
@@ -194,7 +194,7 @@ rule remove_duplicates_pe:
         java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/pe/{wildcards.sample}.dup_metrics.txt
         """
 
-#call peaks using MacS3 for SE. Need to input a control I think but idk what it is
+#call peaks using MacS3 for SE
 rule macs3_se:
     input: 
         bam="mapped_reads/se/{sample}.noduplicates.bam"
@@ -203,10 +203,10 @@ rule macs3_se:
     shell: 
         """
         mkdir -p macs3_peaks/se
-        macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/se
+        conda run -n macs3_env macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/se
         """
 
-#call peaks using MacS3 for PE. Need to input a control I think but idk what it is
+#call peaks using MacS3 for PE
 rule macs3_pe:
     input: 
         bam="mapped_reads/pe/{sample}.noduplicates.bam"
@@ -215,7 +215,7 @@ rule macs3_pe:
     shell: 
         """
         mkdir -p macs3_peaks/pe
-        macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/pe
+        conda run -n macs3_env macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/pe
         """
 
 #create the chromosome length file to be used in bigwig file creation
@@ -239,7 +239,7 @@ rule bed_graph_pe:
     shell:
         """ 
         mkdir -p bedgraphs/pe
-        awk '{{print $1"\t"$2"\t"$3"\t"$7}}' {input} | sort -k1,1 -k2,2n > {sample}.bedGraph
+        awk '{{print $1"\t"$2"\t"$3"\t"$7}}' {input} | sort -k1,1 -k2,2n > {output}
         """
 
 #convert macs3 narrowpeak output into bedgraph files, to be converted into bigwig files
@@ -251,31 +251,31 @@ rule bed_graph_se:
     shell:
         """ 
         mkdir -p bedgraphs/se
-        awk '{{print $1"\t"$2"\t"$3"\t"$7}}' {input} | sort -k1,1 -k2,2n > {sample}.bedGraph
+        awk '{{print $1"\t"$2"\t"$3"\t"$7}}' {input} | sort -k1,1 -k2,2n > {output}
         """
 
 rule bigwig_pe:
     input:
-        "chromsizes.genome",
-        "bedgraphs/pe/{sample}.bedGraph"
+        sizes="chromsizes.genome",
+        bg="bedgraphs/pe/{sample}.bedGraph"
     output:
-        bigwig_files/pe/{sample}.bw
+        "bigwig_files/pe/{sample}.bw"
     shell:
         """
         mkdir -p bigwig_files/pe
-        bedGraphToBigWig {sample}.bedGraph chromsizes.genome {sample}.bw
+        conda run -n ucsc_env bedGraphToBigWig {input.bg} {input.sizes} {output}
         """
 
 rule bigwig_se:
     input:
-        "chromsizes.genome",
-        "bedgraphs/se/{sample}.bedGraph"
+        sizes="chromsizes.genome",
+        bg="bedgraphs/se/{sample}.bedGraph"
     output:
-        bigwig_files/se/{sample}.bw
+        "bigwig_files/se/{sample}.bw"
     shell:
         """
         mkdir -p bigwig_files/se
-        bedGraphToBigWig {sample}.bedGraph chromsizes.genome {sample}.bw
+        conda run -n ucsc_env bedGraphToBigWig {input.bg} {input.sizes} {output}
         """
 
 #cleanup rule to remove files and run snakemake again
@@ -289,6 +289,7 @@ rule cleanup:
         rm -rf trimmed 
         rm -rf mapped_reads 
         rm -rf macs3_peaks
+        rm -rf bedgraphs
         rm -rf bigwig_files
         rm -rf .snakemake
         """
