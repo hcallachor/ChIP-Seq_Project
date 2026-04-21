@@ -100,8 +100,9 @@ Requires Java.
 java -jar picard.jar
 ```
 
-Please see the link below for further details and to download picard.jar:
+Please see the link below for further details and to download picard.jar: 
 https://github.com/broadinstitute/picard/releases/tag/3.4.0
+
 ---
 
 ### Create environment and install macs3
