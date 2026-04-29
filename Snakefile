@@ -1,77 +1,88 @@
-#main snakefile
 import os
 import yaml
 
+configfile: 'CompProjectconfig.yaml' 
 
-configfile: 'CompProjectconfig.yaml' #snakemake will pull info from this file
-
-#load the yaml file containing the metadata for the samples (paired vs single end)
-single_samples = config["Single End"] #this algins with the formatting of the YAML for SINGLE END READS
-paired_samples = config["Paired End"] #this aligns with teh formatting of the YAML for PARIED END READS
-samples = config["SRAs"] #all of the samples are going to come in the form of an SRA
+# Load metadata
+single_samples = config["Single End"]
+paired_samples = config["Paired End"]
+samples = config["SRAs"]
 reference_genome = config["Reference Genome"]
 
 rule all:
     input:   
         expand("bigwig_files/pe/{sample}.bw", sample=paired_samples),
         expand("bigwig_files/se/{sample}.bw", sample=single_samples)
-        
 
-#get paired end fastq files from the sra accessions  
+# --- FASTQ PREPARATION ---
+
 rule fasterq_dump:    
     input:
-        "initial_data/{sample}/{sample}.sra" #this is the formatting of the folder made by SampleDownloadPFal.py 
+        "initial_data/{sample}/{sample}.sra" 
     output:
-        "data/fastq/pe/{sample}_1.fastq", # -1 signifies the forward reads
-        "data/fastq/pe/{sample}_2.fastq" # -2 signifies the reverse reads 
+        "data/fastq/pe/{sample}_1.fastq", 
+        "data/fastq/pe/{sample}_2.fastq" 
+    conda: "chipseq_env"
     shell:
         """
         mkdir -p data/fastq/pe
         fasterq-dump {input} -O data/fastq/pe --split-files
         """
         
-#get single end fastq files from sra accessions
 rule fasterq_dump_single:
     input:
-        "initial_data/{sample}/{sample}.sra" #this is the formatting of the folder made by SampleDownloadPFal.py 
+        "initial_data/{sample}/{sample}.sra" 
     output:
         "data/fastq/se/{sample}.fastq"
+    conda: "chipseq_env" 
     shell:
         """
         mkdir -p data/fastq/se
         fasterq-dump {input} -O data/fastq/se
         """
 
-'''The sample fasterq-dump codes are designed to make file formatting similar between the single end and paired end'''
+# --- REFERENCE PREPARATION ---
 
-#download the genome and annotations
 rule download_reference_genome:
     output:
         genome="ref/P_falciparum3D7.fa",
         gff="ref/P_falciparum3D7_annotations.gff3"
+    conda: "chipseq_env"
     shell:
         """
-        mkdir -p ref #making the directory 
-        datasets download genome accession {reference_genome} --include gff3,genome --filename ref/ncbi_dataset.zip #ncbi datasets used to get accession
+        mkdir -p ref 
+        datasets download genome accession {reference_genome} --include gff3,genome --filename ref/ncbi_dataset.zip
         unzip -o ref/ncbi_dataset.zip -d ref/ncbi_dataset
         cp ref/ncbi_dataset/ncbi_dataset/data/*/*genomic.fna {output.genome}
         cp ref/ncbi_dataset/ncbi_dataset/data/*/*genomic.gff {output.gff}
         rm -rf ref/ncbi_dataset ref/ncbi_dataset.zip
         """
 
-#filter single end reads by quality using Trimmomatic 
+rule index_ref:
+    input:
+        genome="ref/P_falciparum3D7.fa"
+    output:
+        touch("ref/index.done")
+    conda: "chipseq_env" 
+    shell:
+        """
+        bwa index {input.genome}
+        """
+
+# --- TRIMMING ---
+
 rule trimmomatic_se:
     input:
         "data/fastq/se/{sample}.fastq"
     output:
         "trimmed/se/{sample}.fastq"
+    conda: "chipseq_env" 
     shell:
         """ 
         mkdir -p trimmed/se 
-        java -jar ~/chipseq_project/Trimmomatic-0.39/trimmomatic-0.39.jar SE -phred33 {input} {output} SLIDINGWINDOW:4:30 MINLEN:35
+        trimmomatic SE -phred33 {input} {output} SLIDINGWINDOW:4:30 MINLEN:35
         """
 
-#filter paired end reads by quality using Trimmomatic 
 rule trimmomatic_pe:
     input:
         r1="data/fastq/pe/{sample}_1.fastq",
@@ -81,39 +92,29 @@ rule trimmomatic_pe:
         r1_unpaired="trimmed/pe/{sample}_1_unpaired.fastq",
         r2_paired="trimmed/pe/{sample}_2_paired.fastq",
         r2_unpaired="trimmed/pe/{sample}_2_unpaired.fastq"
+    conda: "chipseq_env"
     shell:
         """
         mkdir -p trimmed/pe
-        java -jar ~/chipseq_project/Trimmomatic-0.39/trimmomatic-0.39.jar PE -phred33 {input.r1} {input.r2} {output.r1_paired} {output.r1_unpaired} {output.r2_paired} {output.r2_unpaired} SLIDINGWINDOW:4:30 MINLEN:35
+        trimmomatic PE -phred33 {input.r1} {input.r2} {output.r1_paired} {output.r1_unpaired} {output.r2_paired} {output.r2_unpaired} SLIDINGWINDOW:4:30 MINLEN:35
         """
 
-#index reference genome for BWA mapping
-rule index_ref:
-    input:
-        genome="ref/P_falciparum3D7.fa"
-    output:
-        touch("ref/index.done")
-    shell:
-        """
-        bwa index {input.genome}
-        touch {output}
-        """
+# --- MAPPING & FILTERING ---
 
-#map reads to reference genome using BWA-MEM for single end reads
-rule bwa_mapping_se: #use -M in command to make it compatible with Picard, and pipe command to samtools
+rule bwa_mapping_se: 
     input:
         genome="ref/P_falciparum3D7.fa",
         fastq="trimmed/se/{sample}.fastq",
         donecheck="ref/index.done"
     output:
         "mapped_reads/se/{sample}.bam"
+    conda: "chipseq_env"
     shell:
         """
         mkdir -p mapped_reads/se 
         bwa mem -M -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tLB:lib1\\tPL:ILLUMINA' {input.genome} {input.fastq} | samtools view -bS - > {output}
         """
 
-#map reads to reference genome using BWA-MEM for paired end reads
 rule bwa_mapping_pe:
     input:
         genome="ref/P_falciparum3D7.fa",
@@ -122,133 +123,104 @@ rule bwa_mapping_pe:
         idx="ref/index.done"
     output:
         "mapped_reads/pe/{sample}.bam"
+    conda: "chipseq_env"
     shell:
         """
         mkdir -p mapped_reads/pe
         bwa mem -M -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tLB:lib1\\tPL:ILLUMINA' {input.genome} {input.r1} {input.r2} | samtools view -bS - > {output}
         """
 
-#quality filter SE bam files by Phred quality score 30 using samtools
 rule filter_by_phred_score_se:
-    input:
-        "mapped_reads/se/{sample}.bam"
-    output:
-        "mapped_reads/se/{sample}.phred30.bam"
-    shell:
-        """
-        samtools view -b -q 30 {input} > {output}
-        """
+    input: "mapped_reads/se/{sample}.bam"
+    output: "mapped_reads/se/{sample}.phred30.bam"
+    conda: "chipseq_env"
+    shell: "samtools view -b -q 30 {input} > {output}"
 
-#quality filter PE bam files by Phred quality score 30 using samtools
 rule filter_by_phred_score_pe:
-    input:
-        "mapped_reads/pe/{sample}.bam"
-    output:
-        "mapped_reads/pe/{sample}.phred30.bam"
-    shell:
-        """
-        samtools view -b -q 30 {input} > {output}
-        """
+    input: "mapped_reads/pe/{sample}.bam"
+    output: "mapped_reads/pe/{sample}.phred30.bam"
+    conda: "chipseq_env"
+    shell: "samtools view -b -q 30 {input} > {output}"
 
-#sort SE bam files by coordinate order using samtools. Picards' MarkDuplicates requires sorted bam files as input
 rule sort_bam_se:
-    input:
-        "mapped_reads/se/{sample}.phred30.bam"
-    output:
-        "mapped_reads/se/{sample}.sorted.bam"
-    shell:
-        """
-        samtools sort {input} -o {output}
-        """
+    input: "mapped_reads/se/{sample}.phred30.bam"
+    output: "mapped_reads/se/{sample}.sorted.bam"
+    conda: "chipseq_env"
+    shell: "samtools sort {input} -o {output}"
 
-#sort PE bam files by coordinate order using samtools. Picards' MarkDuplicates requires sorted bam files as input
 rule sort_bam_pe:
-    input:
-        "mapped_reads/pe/{sample}.phred30.bam"
-    output:
-        "mapped_reads/pe/{sample}.sorted.bam"
-    shell:
-        """
-        samtools sort {input} -o {output}
-        """
+    input: "mapped_reads/pe/{sample}.phred30.bam"
+    output: "mapped_reads/pe/{sample}.sorted.bam"
+    conda: "chipseq_env"
+    shell: "samtools sort {input} -o {output}"
 
-#remove duplicates using Picard’s MarkDuplicates for SE
+# --- POST-MAPPING (PICARD & MACS3) ---
+
 rule remove_duplicates_se:
-    input: 
-        "mapped_reads/se/{sample}.sorted.bam"
+    input: "mapped_reads/se/{sample}.sorted.bam"
     output: 
-        "mapped_reads/se/{sample}.noduplicates.bam"
+        bam="mapped_reads/se/{sample}.noduplicates.bam",
+        metrics="mapped_reads/se/{sample}.dup_metrics.txt"
+    conda: "chipseq_env"
     shell: 
-        """
-        java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/se/{wildcards.sample}.dup_metrics.txt
-        """
+        "picard MarkDuplicates I={input} O={output.bam} M={output.metrics} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT"
 
-#remove duplicates using Picard’s MarkDuplicates for PE
 rule remove_duplicates_pe:
-    input: 
-        "mapped_reads/pe/{sample}.sorted.bam"
+    input: "mapped_reads/pe/{sample}.sorted.bam"
     output: 
-        "mapped_reads/pe/{sample}.noduplicates.bam"
+        bam="mapped_reads/pe/{sample}.noduplicates.bam",
+        metrics="mapped_reads/pe/{sample}.dup_metrics.txt"
+    conda: "chipseq_env"
     shell: 
-        """
-        java -jar picard.jar MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT M=mapped_reads/pe/{wildcards.sample}.dup_metrics.txt
-        """
+        "picard MarkDuplicates I={input} O={output.bam} M={output.metrics} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT"
 
-#call peaks using MacS3 for SE
 rule macs3_se:
-    input: 
-        bam="mapped_reads/se/{sample}.noduplicates.bam"
-    output: 
-        "macs3_peaks/se/{sample}_peaks.narrowPeak"
+    input: bam="mapped_reads/se/{sample}.noduplicates.bam"
+    output: "macs3_peaks/se/{sample}_peaks.narrowPeak"
+    conda: "chipseq_env"
     shell: 
         """
         mkdir -p macs3_peaks/se
-        conda run -n macs3_env macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/se
+        macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/se
         """
 
-#call peaks using MacS3 for PE
 rule macs3_pe:
-    input: 
-        bam="mapped_reads/pe/{sample}.noduplicates.bam"
-    output: 
-        "macs3_peaks/pe/{sample}_peaks.narrowPeak"
+    input: bam="mapped_reads/pe/{sample}.noduplicates.bam"
+    output: "macs3_peaks/pe/{sample}_peaks.narrowPeak"
+    conda: "chipseq_env"
     shell: 
         """
         mkdir -p macs3_peaks/pe
-        conda run -n macs3_env macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/pe
+        macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/pe
         """
 
-#create the chromosome length file to be used in bigwig file creation
+# --- VISUALIZATION PREP ---
+
 rule chrom_sizes:
-    input:
-        genome="ref/P_falciparum3D7.fa"
-    output:
-        "chromsizes.genome"
+    input: genome="ref/P_falciparum3D7.fa"
+    output: "chromsizes.genome"
+    conda: "chipseq_env"
     shell:
         """
         samtools faidx {input.genome}
         cut -f1,2 {input.genome}.fai > {output}
         """
 
-#convert macs3 narrowpeak output into bedgraph files, to be converted into bigwig files
 rule bed_graph_pe:
-    input:
-        "macs3_peaks/pe/{sample}_peaks.narrowPeak"
-    output:
-        "bedgraphs/pe/{sample}.bedGraph"
-    shell:
+    input: "macs3_peaks/pe/{sample}_peaks.narrowPeak"
+    output: "bedgraphs/pe/{sample}.bedGraph"
+    conda: "chipseq_env"
+    shell: 
         """ 
         mkdir -p bedgraphs/pe
         awk '{{print $1"\t"$2"\t"$3"\t"$7}}' {input} | sort -k1,1 -k2,2n > {output}
         """
 
-#convert macs3 narrowpeak output into bedgraph files, to be converted into bigwig files
 rule bed_graph_se:
-    input:
-        "macs3_peaks/se/{sample}_peaks.narrowPeak"
-    output:
-        "bedgraphs/se/{sample}.bedGraph"
-    shell:
+    input: "macs3_peaks/se/{sample}_peaks.narrowPeak"
+    output: "bedgraphs/se/{sample}.bedGraph"
+    conda: "chipseq_env"
+    shell: 
         """ 
         mkdir -p bedgraphs/se
         awk '{{print $1"\t"$2"\t"$3"\t"$7}}' {input} | sort -k1,1 -k2,2n > {output}
@@ -258,38 +230,28 @@ rule bigwig_pe:
     input:
         sizes="chromsizes.genome",
         bg="bedgraphs/pe/{sample}.bedGraph"
-    output:
-        "bigwig_files/pe/{sample}.bw"
+    output: "bigwig_files/pe/{sample}.bw"
+    conda: "chipseq_env"
     shell:
         """
         mkdir -p bigwig_files/pe
-        conda run -n ucsc_env bedGraphToBigWig {input.bg} {input.sizes} {output}
+        bedGraphToBigWig {input.bg} {input.sizes} {output}
         """
 
 rule bigwig_se:
     input:
         sizes="chromsizes.genome",
         bg="bedgraphs/se/{sample}.bedGraph"
-    output:
-        "bigwig_files/se/{sample}.bw"
+    output: "bigwig_files/se/{sample}.bw"
+    conda: "chipseq_env"
     shell:
         """
         mkdir -p bigwig_files/se
-        conda run -n ucsc_env bedGraphToBigWig {input.bg} {input.sizes} {output}
+        bedGraphToBigWig {input.bg} {input.sizes} {output}
         """
 
-#cleanup rule to remove files and run snakemake again
 rule cleanup:
     shell:
         """
-        rm -rf ncbi_dataset ncbi_dataset.zip
-        rm -rf ref
-        rm -rf data/fastq/se
-        rm -rf data/fastq/pe
-        rm -rf trimmed 
-        rm -rf mapped_reads 
-        rm -rf macs3_peaks
-        rm -rf bedgraphs
-        rm -rf bigwig_files
-        rm -rf .snakemake
+        rm -rf ncbi_dataset ncbi_dataset.zip ref data/fastq/se data/fastq/pe trimmed mapped_reads macs3_peaks bedgraphs bigwig_files .snakemake chromsizes.genome
         """
