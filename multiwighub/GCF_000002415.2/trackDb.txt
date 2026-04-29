@@ -1,0 +1,38 @@
+track all_pvivax
+container multiWig
+shortLabel all_pvivax
+longLabel all_pvivax
+type bigWig 0 30000
+viewLimits 0:100
+visibility full
+maxHeightPixels 150:30:11
+aggregate stacked
+showSubtrackColorOnUi on
+windowingFunction mean
+priority 1.4
+configurable on
+autoScale on
+
+track pvivax1
+bigDataUrl https://github.com/hcallachor/ChIP-Seq_Project/raw/refs/heads/main/bigwig_files/se/SRR5298160.bw
+shortLabel pvivax1
+longLabel pvivax1
+parent all_pvivax
+type bigWig
+color 180,102,255
+
+track pvivax2
+bigDataUrl https://github.com/hcallachor/ChIP-Seq_Project/raw/refs/heads/main/bigwig_files/se/SRR5298162.bw
+shortLabel pvivax2
+longLabel pvivax2
+type bigWig
+parent all_pvivax
+color 136,102,255
+
+track pvivax3
+bigDataUrl https://github.com/hcallachor/ChIP-Seq_Project/raw/refs/heads/main/bigwig_files/se/SRR5298170.bw
+shortLabel pvivax3
+longLabel pvivax3
+type bigWig
+parent all_pvivax
+color 136,102,255
