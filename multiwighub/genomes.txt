@@ -1,2 +1,2 @@
-genome 	GCF_000002415.2
+genome 	malaria parasite P. vivax (PvSal1 Salvador I 2009) (GCF_000002415.2)
 trackDb GCF_000002415.2/trackDb.txt
