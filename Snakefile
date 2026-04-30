@@ -22,7 +22,7 @@ rule fasterq_dump:
     output:
         "data/fastq/pe/{sample}_1.fastq", 
         "data/fastq/pe/{sample}_2.fastq" 
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell:
         """
         mkdir -p data/fastq/pe
@@ -34,7 +34,7 @@ rule fasterq_dump_single:
         "initial_data/{sample}/{sample}.sra" 
     output:
         "data/fastq/se/{sample}.fastq"
-    conda: "chipseq_env" 
+    conda: "chipseq_env.yaml" 
     shell:
         """
         mkdir -p data/fastq/se
@@ -47,7 +47,7 @@ rule download_reference_genome:
     output:
         genome="ref/P_falciparum3D7.fa",
         gff="ref/P_falciparum3D7_annotations.gff3"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell:
         """
         mkdir -p ref 
@@ -63,7 +63,7 @@ rule index_ref:
         genome="ref/P_falciparum3D7.fa"
     output:
         touch("ref/index.done")
-    conda: "chipseq_env" 
+    conda: "chipseq_env.yaml" 
     shell:
         """
         bwa index {input.genome}
@@ -76,7 +76,7 @@ rule trimmomatic_se:
         "data/fastq/se/{sample}.fastq"
     output:
         "trimmed/se/{sample}.fastq"
-    conda: "chipseq_env" 
+    conda: "chipseq_env.yaml" 
     shell:
         """ 
         mkdir -p trimmed/se 
@@ -92,7 +92,7 @@ rule trimmomatic_pe:
         r1_unpaired="trimmed/pe/{sample}_1_unpaired.fastq",
         r2_paired="trimmed/pe/{sample}_2_paired.fastq",
         r2_unpaired="trimmed/pe/{sample}_2_unpaired.fastq"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell:
         """
         mkdir -p trimmed/pe
@@ -108,7 +108,7 @@ rule bwa_mapping_se:
         donecheck="ref/index.done"
     output:
         "mapped_reads/se/{sample}.bam"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell:
         """
         mkdir -p mapped_reads/se 
@@ -123,7 +123,7 @@ rule bwa_mapping_pe:
         idx="ref/index.done"
     output:
         "mapped_reads/pe/{sample}.bam"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell:
         """
         mkdir -p mapped_reads/pe
@@ -133,25 +133,25 @@ rule bwa_mapping_pe:
 rule filter_by_phred_score_se:
     input: "mapped_reads/se/{sample}.bam"
     output: "mapped_reads/se/{sample}.phred30.bam"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: "samtools view -b -q 30 {input} > {output}"
 
 rule filter_by_phred_score_pe:
     input: "mapped_reads/pe/{sample}.bam"
     output: "mapped_reads/pe/{sample}.phred30.bam"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: "samtools view -b -q 30 {input} > {output}"
 
 rule sort_bam_se:
     input: "mapped_reads/se/{sample}.phred30.bam"
     output: "mapped_reads/se/{sample}.sorted.bam"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: "samtools sort {input} -o {output}"
 
 rule sort_bam_pe:
     input: "mapped_reads/pe/{sample}.phred30.bam"
     output: "mapped_reads/pe/{sample}.sorted.bam"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: "samtools sort {input} -o {output}"
 
 # --- POST-MAPPING (PICARD & MACS3) ---
@@ -161,7 +161,7 @@ rule remove_duplicates_se:
     output: 
         bam="mapped_reads/se/{sample}.noduplicates.bam",
         metrics="mapped_reads/se/{sample}.dup_metrics.txt"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: 
         "picard MarkDuplicates I={input} O={output.bam} M={output.metrics} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT"
 
@@ -170,14 +170,14 @@ rule remove_duplicates_pe:
     output: 
         bam="mapped_reads/pe/{sample}.noduplicates.bam",
         metrics="mapped_reads/pe/{sample}.dup_metrics.txt"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: 
         "picard MarkDuplicates I={input} O={output.bam} M={output.metrics} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT"
 
 rule macs3_se:
     input: bam="mapped_reads/se/{sample}.noduplicates.bam"
     output: "macs3_peaks/se/{sample}_peaks.narrowPeak"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: 
         """
         mkdir -p macs3_peaks/se
@@ -187,7 +187,7 @@ rule macs3_se:
 rule macs3_pe:
     input: bam="mapped_reads/pe/{sample}.noduplicates.bam"
     output: "macs3_peaks/pe/{sample}_peaks.narrowPeak"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: 
         """
         mkdir -p macs3_peaks/pe
@@ -199,7 +199,7 @@ rule macs3_pe:
 rule chrom_sizes:
     input: genome="ref/P_falciparum3D7.fa"
     output: "chromsizes.genome"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell:
         """
         samtools faidx {input.genome}
@@ -209,7 +209,7 @@ rule chrom_sizes:
 rule bed_graph_pe:
     input: "macs3_peaks/pe/{sample}_peaks.narrowPeak"
     output: "bedgraphs/pe/{sample}.bedGraph"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: 
         """ 
         mkdir -p bedgraphs/pe
@@ -219,7 +219,7 @@ rule bed_graph_pe:
 rule bed_graph_se:
     input: "macs3_peaks/se/{sample}_peaks.narrowPeak"
     output: "bedgraphs/se/{sample}.bedGraph"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell: 
         """ 
         mkdir -p bedgraphs/se
@@ -231,7 +231,7 @@ rule bigwig_pe:
         sizes="chromsizes.genome",
         bg="bedgraphs/pe/{sample}.bedGraph"
     output: "bigwig_files/pe/{sample}.bw"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell:
         """
         mkdir -p bigwig_files/pe
@@ -243,7 +243,7 @@ rule bigwig_se:
         sizes="chromsizes.genome",
         bg="bedgraphs/se/{sample}.bedGraph"
     output: "bigwig_files/se/{sample}.bw"
-    conda: "chipseq_env"
+    conda: "chipseq_env.yaml"
     shell:
         """
         mkdir -p bigwig_files/se
