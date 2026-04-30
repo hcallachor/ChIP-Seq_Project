@@ -3,3 +3,4 @@ shortLabel My Hub
 longLabel This is my custom track hub
 genomesFile genomes.txt
 email hcallachor@luc.edu
+UseOneFile on
