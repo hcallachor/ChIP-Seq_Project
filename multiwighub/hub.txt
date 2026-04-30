@@ -4,4 +4,4 @@ longLabel This is my custom track hub
 genomesFile genomes.txt
 email hcallachor@luc.edu
 UseOneFile on
-descriptionUrl https://github.com/hcallachor/ChIP-Seq_Project/raw/refs/heads/main/multiwighub/description.html
+htmlUrl https://github.com/hcallachor/ChIP-Seq_Project/raw/refs/heads/main/multiwighub/description.html
