@@ -203,7 +203,7 @@ snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml
 ### Run Snakemake (background mode)
 
 ```bash
-nohup snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml 
+nohup snakemake -s Snakefile -c 4 --configfile CompProjectconfig.yaml &
 ```
 
 ---
