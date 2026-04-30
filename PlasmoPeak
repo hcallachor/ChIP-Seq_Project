@@ -1,35 +1,39 @@
 import os
 import yaml
 
-configfile: 'config.yaml' 
+configfile: 'config.yaml' #the config file for samples is pulled in
 
 # Load metadata
-single_samples = config["Single End"]
-paired_samples = config["Paired End"]
-samples = config["SRAs"]
-reference_genome = config["Reference Genome"]
+single_samples = config["Single End"] #single end samples
+paired_samples = config["Paired End"] #paired end samples 
+samples = config["SRAs"] #all samples 
+reference_genome = config["Reference Genome"] #ref genome pulled in 
 
-rule all:
+rule all: #rule all lets snakemake know how far it is running 
     input:   
-        expand("bigwig_files/pe/{sample}.bw", sample=paired_samples),
+        expand("bigwig_files/pe/{sample}.bw", sample=paired_samples), #bigwig is last step, paired end and single end
         expand("bigwig_files/se/{sample}.bw", sample=single_samples)
+
+
+''' Overall notes: rules are often written as a single end and paired end version to reflect different datatypes
+and the corresponding structures needed for the tools'''
 
 # --- FASTQ PREPARATION ---
 
-rule fasterq_dump:    
+rule fasterq_dump: #fasterq dump grabs quality info for each sample 
     input:
         "initial_data/{sample}/{sample}.sra" 
     output:
         "data/fastq/pe/{sample}_1.fastq", 
         "data/fastq/pe/{sample}_2.fastq" 
     conda: "environment"
-    shell:
+    shell: #calling fasterq-dump to get the info about the sample (split for paired)
         """
         mkdir -p data/fastq/pe
         fasterq-dump {input} -O data/fastq/pe --split-files
         """
         
-rule fasterq_dump_single:
+rule fasterq_dump_single: #single end version of fasterq dump
     input:
         "initial_data/{sample}/{sample}.sra" 
     output:
@@ -43,12 +47,12 @@ rule fasterq_dump_single:
 
 # --- REFERENCE PREPARATION ---
 
-rule download_reference_genome:
-    output:
+rule download_reference_genome: #need ref for comparison and alignment 
+    output: #coded as the plasmodium fal genome 
         genome="ref/P_falciparum3D7.fa",
         gff="ref/P_falciparum3D7_annotations.gff3"
     conda: "environment"
-    shell:
+    shell: #shell pulls the ref genome from config to download
         """
         mkdir -p ref 
         datasets download genome accession {reference_genome} --include gff3,genome --filename ref/ncbi_dataset.zip
@@ -58,7 +62,7 @@ rule download_reference_genome:
         rm -rf ref/ncbi_dataset ref/ncbi_dataset.zip
         """
 
-rule index_ref:
+rule index_ref: #index is needed for bwa alignments later 
     input:
         genome="ref/P_falciparum3D7.fa"
     output:
@@ -71,19 +75,19 @@ rule index_ref:
 
 # --- TRIMMING ---
 
-rule trimmomatic_se:
+rule trimmomatic_se: #trimming allows for better quality control and sequencing artifacts removed 
     input:
         "data/fastq/se/{sample}.fastq"
     output:
         "trimmed/se/{sample}.fastq"
     conda: "environment" 
-    shell:
+    shell: #specifically set up for single end reads 
         """ 
         mkdir -p trimmed/se 
         trimmomatic SE -phred33 {input} {output} SLIDINGWINDOW:4:30 MINLEN:35
         """
 
-rule trimmomatic_pe:
+rule trimmomatic_pe: #trimmomatic needs specification for paired end, file paths reflect that 
     input:
         r1="data/fastq/pe/{sample}_1.fastq",
         r2="data/fastq/pe/{sample}_2.fastq"
@@ -101,7 +105,7 @@ rule trimmomatic_pe:
 
 # --- MAPPING & FILTERING ---
 
-rule bwa_mapping_se: 
+rule bwa_mapping_se: #bwa is for aligning sample against ref genome, single end data rule 
     input:
         genome="ref/P_falciparum3D7.fa",
         fastq="trimmed/se/{sample}.fastq",
@@ -115,7 +119,7 @@ rule bwa_mapping_se:
         bwa mem -M -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tLB:lib1\\tPL:ILLUMINA' {input.genome} {input.fastq} | samtools view -bS - > {output}
         """
 
-rule bwa_mapping_pe:
+rule bwa_mapping_pe: #bwa paired end data rule 
     input:
         genome="ref/P_falciparum3D7.fa",
         r1="trimmed/pe/{sample}_1_paired.fastq",
@@ -130,25 +134,25 @@ rule bwa_mapping_pe:
         bwa mem -M -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tLB:lib1\\tPL:ILLUMINA' {input.genome} {input.r1} {input.r2} | samtools view -bS - > {output}
         """
 
-rule filter_by_phred_score_se:
+rule filter_by_phred_score_se: #phred score filtering to get rid of low quality data
     input: "mapped_reads/se/{sample}.bam"
     output: "mapped_reads/se/{sample}.phred30.bam"
     conda: "environment"
     shell: "samtools view -b -q 30 {input} > {output}"
 
-rule filter_by_phred_score_pe:
+rule filter_by_phred_score_pe: #phred score filtering to get rid of low quality data, paired end version 
     input: "mapped_reads/pe/{sample}.bam"
     output: "mapped_reads/pe/{sample}.phred30.bam"
     conda: "environment"
     shell: "samtools view -b -q 30 {input} > {output}"
 
-rule sort_bam_se:
+rule sort_bam_se: #it is necessary to sort files for downline use (macS3)
     input: "mapped_reads/se/{sample}.phred30.bam"
     output: "mapped_reads/se/{sample}.sorted.bam"
     conda: "environment"
     shell: "samtools sort {input} -o {output}"
 
-rule sort_bam_pe:
+rule sort_bam_pe: #it is necessary to sort files for downline use (macS3), paired end
     input: "mapped_reads/pe/{sample}.phred30.bam"
     output: "mapped_reads/pe/{sample}.sorted.bam"
     conda: "environment"
@@ -156,7 +160,7 @@ rule sort_bam_pe:
 
 # --- POST-MAPPING (PICARD & MACS3) ---
 
-rule remove_duplicates_se:
+rule remove_duplicates_se: #duplicates are generated in the process of preparing data, remove the extras
     input: "mapped_reads/se/{sample}.sorted.bam"
     output: 
         bam="mapped_reads/se/{sample}.noduplicates.bam",
@@ -174,7 +178,7 @@ rule remove_duplicates_pe:
     shell: 
         "picard MarkDuplicates I={input} O={output.bam} M={output.metrics} REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=STRICT"
 
-rule macs3_se:
+rule macs3_se: #macS3 identifies peaks in the data 
     input: bam="mapped_reads/se/{sample}.noduplicates.bam"
     output: "macs3_peaks/se/{sample}_peaks.narrowPeak"
     conda: "environment"
@@ -184,7 +188,7 @@ rule macs3_se:
         macs3 callpeak -t {input.bam} -f BAM -g 2e7 -q 0.001 --nomodel --shift 0 --extsize 200 -n {wildcards.sample} --outdir macs3_peaks/se
         """
 
-rule macs3_pe:
+rule macs3_pe: #paired end version of masS3
     input: bam="mapped_reads/pe/{sample}.noduplicates.bam"
     output: "macs3_peaks/pe/{sample}_peaks.narrowPeak"
     conda: "environment"
@@ -196,7 +200,7 @@ rule macs3_pe:
 
 # --- VISUALIZATION PREP ---
 
-rule chrom_sizes:
+rule chrom_sizes: #chrome sizes is needed for making peaks under the bed_graph steps 
     input: genome="ref/P_falciparum3D7.fa"
     output: "chromsizes.genome"
     conda: "environment"
@@ -206,7 +210,7 @@ rule chrom_sizes:
         cut -f1,2 {input.genome}.fai > {output}
         """
 
-rule bed_graph_pe:
+rule bed_graph_pe: #bedgraph organizes the peaks 
     input: "macs3_peaks/pe/{sample}_peaks.narrowPeak"
     output: "bedgraphs/pe/{sample}.bedGraph"
     conda: "environment"
@@ -216,7 +220,7 @@ rule bed_graph_pe:
         awk '{{print $1"\t"$2"\t"$3"\t"$7}}' {input} | sort -k1,1 -k2,2n > {output}
         """
 
-rule bed_graph_se:
+rule bed_graph_se: #bedgraph organizes the peaks 
     input: "macs3_peaks/se/{sample}_peaks.narrowPeak"
     output: "bedgraphs/se/{sample}.bedGraph"
     conda: "environment"
@@ -226,7 +230,7 @@ rule bed_graph_se:
         awk '{{print $1"\t"$2"\t"$3"\t"$7}}' {input} | sort -k1,1 -k2,2n > {output}
         """
 
-rule bigwig_pe:
+rule bigwig_pe: #bigwig files are allowed to be passed into the genome browser 
     input:
         sizes="chromsizes.genome",
         bg="bedgraphs/pe/{sample}.bedGraph"
@@ -250,7 +254,7 @@ rule bigwig_se:
         bedGraphToBigWig {input.bg} {input.sizes} {output}
         """
 
-rule cleanup:
+rule cleanup: #this is for cleaning up snakemake processes
     shell:
         """
         rm -rf ncbi_dataset ncbi_dataset.zip ref data/fastq/se data/fastq/pe trimmed mapped_reads macs3_peaks bedgraphs bigwig_files .snakemake chromsizes.genome
