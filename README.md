@@ -24,7 +24,7 @@ git clone https://github.com/hcallachor/ChIP-Seq_Project
 
 ---
 
- Before using the pipeline, please ensure you have the following tools downloaded. This document includes instructions on how to download the tools.
+Before running the pipeline, ensure Conda is installed. All required tools will be installed automatically via the provided environment below.
 
 ## Tools used in this pipeline:
 | Tool | Version |
@@ -69,11 +69,11 @@ conda init bash
 ---
 # Create the environment from the provided YAML file
 ```bash
-mamba env create -f envs/environment.yaml -n environment
+conda env create -f envs/environment.yaml -n environment
 ```
 ### Note: If you add new tools to the YAML later, update the environment using:
 ```bash
-mamba env update -n environment -f envs/environment.yaml
+conda env update -n environment -f envs/environment.yaml
 ```
 
 
