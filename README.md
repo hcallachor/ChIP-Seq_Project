@@ -72,9 +72,15 @@ bash ~/miniconda.sh -b -p $HOME/miniconda
 export PATH="$HOME/miniconda/bin:$PATH"
 echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
+```
+Initialize Conda:
+```bash
 conda init bash
 ```
-
+Activate Conda:
+```bash
+conda activate environment
+```
 ---
 # Create the environment from the provided YAML file
 ```bash
