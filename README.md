@@ -21,6 +21,10 @@ Then clone the repository using this command:
 git clone https://github.com/hcallachor/ChIP-Seq_Project
 ```
 
+Then, change your working directory to the cloned repository:
+```bash
+cd ChIP-Seq_Project
+```
 
 ---
 
@@ -56,7 +60,12 @@ install conda using this command:
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
 ```
 
-set conda path:
+-Note: if you have already previously installed miniconda, you only need to initialize the conda:
+```bash
+conda init bash
+```
+
+If this is your first time using miniconda, set conda path:
 
 ```bash
 bash ~/miniconda.sh -b -p $HOME/miniconda
