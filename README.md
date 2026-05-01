@@ -69,11 +69,11 @@ conda init bash
 ---
 # Create the environment from the provided YAML file
 ```bash
-mamba env create -f envs/environment.yaml -n environment
+mamba env create -f environment.yaml -n environment
 ```
 ### Note: If you add new tools to the YAML later, update the environment using:
 ```bash
-mamba env update -n environment -f envs/environment.yaml
+mamba env update -n environment -f environment.yaml
 ```
 
 
@@ -148,7 +148,7 @@ snakemake -s PlasmoPeak -c 4 --configfile config.yaml --use-conda
 ### Run Snakemake (background mode)
 
 ```bash
-nohup snakemake -s PlasmoPeak -c 4 --configfile config.yaml --use-conda
+nohup snakemake -s PlasmoPeak -c 4 --configfile config.yaml --use-conda &
 ```
 
 ---
