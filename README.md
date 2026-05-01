@@ -77,10 +77,7 @@ Initialize Conda:
 ```bash
 conda init bash
 ```
-Activate Conda:
-```bash
-conda activate environment
-```
+
 ---
 # Create the environment from the provided YAML file
 ```bash
@@ -90,8 +87,10 @@ conda env create -f environment.yaml -n environment
 ```bash
 env update -n environment -f environment.yaml
 ```
-
-
+Activate Conda:
+```bash
+conda activate environment
+```
 
 ### Install PyYAML
 
